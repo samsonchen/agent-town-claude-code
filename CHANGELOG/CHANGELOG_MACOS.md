@@ -5,6 +5,7 @@ What changed in each release of the macOS app. Each version is tagged `v<version
 ## 1.0.16 (2026-11-15)
 
 - The office now starts in compact view (half size, for a laptop screen). Settings → Office has **Large view** (off by default) for the full-size office; it takes effect after a restart. This replaces the Compact view setting, so everyone starts in compact view until they turn on Large view.
+- The first sound after a long idle is no longer lost on a USB speaker: a moment of silence wakes the output first, so that sound comes after a short pause.
 
 ## 1.0.15 (2026-11-14)
 

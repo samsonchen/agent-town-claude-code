@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -72,10 +73,60 @@ enum SoundKind: String, CaseIterable, Identifiable {
         preview(kind)
     }
 
+    // Waking the output (macOS only). After the output has been idle for a while, some devices (a USB
+    // speaker, for one) drop the start of the next sound: the first sound after a long idle came out
+    // silent while the second was fine, with afplay too. So when no sound has played for `wakeAfter`
+    // seconds, `wakeLead` seconds of silence play first and the sound follows. `-soundWakeLead N` and
+    // `-soundWakeAfter N` change them (N of 0 for the lead turns this off, 0 for the idle time wakes
+    // the output before every sound).
+    private static var lastSound: Date?
+    private static var wakeEnds = Date.distantPast
+    private static var silence: AVAudioPlayer?
+
+    private static func setting(_ key: String, _ fallback: Double) -> Double {
+        let d = UserDefaults.standard
+        return d.object(forKey: key) == nil ? fallback : max(0, d.double(forKey: key))
+    }
+    static var wakeLead: Double { setting("soundWakeLead", 0.7) }
+    static var wakeAfter: Double { setting("soundWakeAfter", 60) }
+
+    /// A mono 16-bit WAV of silence.
+    private static func silentWAV(seconds: Double) -> Data {
+        let rate = 44100
+        let bytes = Int(seconds * Double(rate)) * 2
+        var d = Data()
+        func u32(_ v: Int) { withUnsafeBytes(of: UInt32(v).littleEndian) { d.append(contentsOf: $0) } }
+        func u16(_ v: Int) { withUnsafeBytes(of: UInt16(v).littleEndian) { d.append(contentsOf: $0) } }
+        d.append(contentsOf: Array("RIFF".utf8)); u32(36 + bytes)
+        d.append(contentsOf: Array("WAVEfmt ".utf8)); u32(16); u16(1); u16(1); u32(rate); u32(rate * 2); u16(2); u16(16)
+        d.append(contentsOf: Array("data".utf8)); u32(bytes)
+        d.append(Data(count: bytes))
+        return d
+    }
+
     /// Plays the chosen sound once at the current volume, whatever the switches say (Settings → Play).
     static func preview(_ kind: SoundKind) {
         guard let s = sound(for: kind) else { return }
         s.volume = Float(volume)
+        let now = Date()
+        let lead = wakeLead
+        if lead > 0, now >= wakeEnds, now.timeIntervalSince(lastSound ?? .distantPast) > wakeAfter,
+           let quiet = try? AVAudioPlayer(data: silentWAV(seconds: lead)) {
+            silence = quiet
+            quiet.play()
+            wakeEnds = now.addingTimeInterval(lead)
+            if ProcessInfo.processInfo.environment["TOWN_DEBUG"] != nil { print("sound: waking the output, \(lead) s of silence first") }
+        }
+        let delay = max(0, wakeEnds.timeIntervalSince(now))
+        lastSound = now.addingTimeInterval(delay)
+        guard delay > 0 else { start(s); return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(delay))
+            start(s)
+        }
+    }
+
+    private static func start(_ s: NSSound) {
         playing.removeAll { !$0.isPlaying }
         playing.append(s)
         s.play()

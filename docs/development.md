@@ -105,6 +105,7 @@ These work on the built app, `app/macos/.build/debug/AgentTown`, and through `ru
 | `--resize WxH` | Eight seconds in, shrinks the window as a drag would, to see auto-scroll |
 | `-breakIdleSeconds N` | Break time on the bench after N idle seconds instead of 180 |
 | `-breakPastime NAME` | Standing characters on a break do only NAME (`juggle`, `cube`, `toss`, `phone`, `chat`, `doze`) |
+| `-soundWakeLead N`, `-soundWakeAfter N` | Seconds of silence played before a sound after the output has been idle (default 0.7; 0 is off), and the idle time that triggers it (default 60; 0 is every sound) |
 | `-language zh-Hant` | Runs in Traditional Chinese |
 
 Any setting can be given the same way (`-hideIdleBlocks YES -idleHideSeconds 1`). To look at a scene without noise: run a demo with `-showWindow YES -sound NO`, then `screencapture -x -l <window id>`.

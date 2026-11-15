@@ -73,6 +73,7 @@ From `docs/roadmap.md` and `docs/spec.md`:
 - [ ] Click through every menu bar item in the packaged app: About, Show agent-town, Stay on top, Sound, Settings…, Quit. The About window was checked only as a rendered image.
 - [ ] Office blocks: a second project's block appears before its first prompt, stacks under the first one, and the window grows. It goes when that project's last session ends.
 - [ ] The window opens where it was after a restart, on the same display.
+- [ ] **Windows: does the first sound after a long idle get lost on a USB speaker?** The Mac app lost it (the first sound after the output had been idle was silent, the second fine, with afplay too), and plays 0.7 s of silence first after 60 idle seconds (`SoundPlayer.preview` in `Sounds.swift`; `docs/spec.md` → Sound settings). Windows may not have the problem, so check by hand on a Windows machine with a USB or other external output before building anything; if it does, do the same there.
 
 ## 7. Known limits of the dev tools
 
