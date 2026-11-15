@@ -1,7 +1,7 @@
 class_name ViewScale
 extends RefCounted
-## Compact view (Settings → Office; read once at launch, so a change applies after a restart): the
-## office is drawn at half scale and its text at 75%, the smallest that stays readable. The layout
+## Compact view is the default; Settings → Office → Large view turns it off (read once at launch, so
+## a change applies after a restart). In compact view the office is drawn at half scale and its text at 75%, the smallest that stays readable. The layout
 ## in meters is the same either way. Port of `ViewScale` in app/macos/Sources/AgentTown/Layout.swift.
 
 static var compact := false

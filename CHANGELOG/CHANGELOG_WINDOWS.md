@@ -2,6 +2,10 @@
 
 What changed in each release of the Windows app. Each version is tagged `windows-v<version>` in this repository, and `git log windows-v<previous>..windows-v<version>` lists its commits. The macOS app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.8 (unreleased)
+
+- The office now starts in compact view (half size, for a laptop screen). Settings → Office has **Large view** (off by default) for the full-size office; it takes effect after a restart. This replaces the Compact view setting, so everyone starts in compact view until they turn on Large view.
+
 ## 1.0.7 (2026-11-14)
 
 - New: Settings → Office → Hide the window when no Claude Code session is open (off by default). The office window hides 5 seconds after the last session closes and comes back, without taking the focus, when a session opens. Show agent-town in the tray menu shows it anyway.

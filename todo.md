@@ -218,11 +218,11 @@ Built in the macOS app 1.0.8; `docs/spec.md` → The office has the details. The
 
 Most users prefer compact view, so on the Mac the setting is reversed: the app starts in compact view, and Settings → Office → **Large view** (off by default) turns it off. Mac code: `ViewScale.compact` in `Layout.swift` (`!bool(forKey: "largeView")`), the toggle in `Preferences.swift`, `docs/spec.md` → The office. Checked on the Mac with a demo of each view (window height 836 vs 1410 points on fixture 05). The Windows app should do the same:
 
-- [ ] Replace the Compact view switch with **Large view**, off by default, same place (above Hide idle project blocks) and same restart note and "Restart now" button. A new setting key (for example `large_view`); the old `compact_view` is no longer read, so everyone starts in compact view.
-- [ ] `ViewScale.compact` is true unless Large view is on (`app/windows/scene/view_scale.gd`, `main.gd`, `shell/town_settings.gd`, `shell/settings_window.gd`).
-- [ ] Window size: a new install has no saved size in either view; compact then opens at the default width with the height fitted to the office (as on the Mac, `WindowPlace.restore`). An install with a large-view size saved opens compact at half its height, as before.
-- [ ] Strings: "Large view" (大型檢視) is in the shared `Localizable.strings` (synced); "Compact view" stays there until this is done, then can go.
-- [ ] `run-local`: `-Large` (`--large yes`) instead of `-Compact` / `--compact yes`, and the help text. Update `docs/windows/` where it names Compact view.
+- [x] Replace the Compact view switch with **Large view**, off by default, same place (above Hide idle project blocks) and same restart note and "Restart now" button. A new setting key (for example `large_view`); the old `compact_view` is no longer read, so everyone starts in compact view.
+- [x] `ViewScale.compact` is true unless Large view is on (`app/windows/scene/view_scale.gd`, `main.gd`, `shell/town_settings.gd`, `shell/settings_window.gd`).
+- [x] Window size: a new install has no saved size in either view; compact then opens at the default width with the height fitted to the office (as on the Mac, `WindowPlace.restore`). An install with a large-view size saved opens compact at half its height, as before.
+- [x] Strings: "Large view" (大型檢視) is in the shared `Localizable.strings` (synced); "Compact view" is gone from both apps' copies.
+- [x] `run-local`: `-Large` (`--large yes`) instead of `-Compact` / `--compact yes`, and the help text. Update `docs/windows/` where it names Compact view.
 
 ### The repository and the data folder: `agent-town-claude-code` (2026-11-13)
 

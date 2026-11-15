@@ -146,7 +146,7 @@ func _ready() -> void:
 
 # --- Office -------------------------------------------------------------------------------
 
-## Compact view, Hide the window when no session is open, Hide idle project blocks with Hide after
+## Large view, Hide the window when no session is open, Hide idle project blocks with Hide after
 ## N seconds under it, and Show tips (spec: settings).
 func _build_office(box: VBoxContainer) -> void:
 	box.add_child(HSeparator.new())
@@ -154,11 +154,11 @@ func _build_office(box: VBoxContainer) -> void:
 	heading.text = labels.t("Office")
 	heading.add_theme_font_size_override("font_size", 16)
 	box.add_child(heading)
-	# Compact view: the scale is set when the window is made, so a change needs a restart.
-	var compact := CheckBox.new()
-	compact.text = labels.t("Compact view")
-	compact.button_pressed = settings.compact_view
-	box.add_child(compact)
+	# Large view (off: compact view): the scale is set when the window is made, so a change needs a restart.
+	var large := CheckBox.new()
+	large.text = labels.t("Large view")
+	large.button_pressed = settings.large_view
+	box.add_child(large)
 	var restart_row := HBoxContainer.new()
 	restart_row.add_theme_constant_override("separation", 10)
 	var note := Label.new()
@@ -169,11 +169,11 @@ func _build_office(box: VBoxContainer) -> void:
 	restart.pressed.connect(_restart)
 	restart_row.add_child(restart)
 	box.add_child(restart_row)
-	restart_row.visible = settings.compact_view != ViewScale.compact
-	compact.toggled.connect(func(on: bool) -> void:
-		settings.compact_view = on
+	restart_row.visible = settings.large_view == ViewScale.compact
+	large.toggled.connect(func(on: bool) -> void:
+		settings.large_view = on
 		settings.save()
-		restart_row.visible = on != ViewScale.compact)
+		restart_row.visible = on == ViewScale.compact)
 	var no_sessions := CheckBox.new()
 	no_sessions.text = labels.t("Hide the window when no Claude Code session is open")
 	no_sessions.button_pressed = settings.hide_without_sessions
@@ -395,7 +395,7 @@ func _file_chosen(path: String) -> void:
 	_fill_choices(_picks[_file_for], _file_for)
 
 
-## Restart now (language, compact view): the app's Quit, then a new run with the same arguments.
+## Restart now (language, large view): the app's Quit, then a new run with the same arguments.
 signal restart_requested
 
 

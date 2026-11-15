@@ -8,7 +8,7 @@ extends Node
 ##   godot --path app/windows -- --demo ../../protocol/fixtures/01-basic-ticket.json [--speed N]
 ##         [--snapshot out.png --at SECONDS[,SECONDS…]] [--language en|zh-Hant] [--open settings|about]
 ##         [--keys "down:1.5,right:1,h"] [--clicks "95:270@2,300:500@6"] [--hide-idle SECONDS]
-##         [--compact yes] [--resize WxH] [--fake-update yes] [--check-now yes] [--open updates]
+##         [--large yes] [--resize WxH] [--fake-update yes] [--check-now yes] [--open updates]
 ##         [--hide-without-sessions yes] [--break-idle SECONDS] [--break-pastime NAME]
 ## [--sound no] keeps this run quiet; [--settings-file PATH] uses its own settings; --open takes
 ## several windows, comma-separated (settings,updates).
@@ -17,11 +17,11 @@ extends Node
 ## --break-idle N starts break time on the bench after N idle seconds instead of 180; --break-pastime
 ## NAME (juggle, cube, toss, phone, chat, doze) gives standing characters only that one.
 ## --hide-without-sessions yes turns Hide the window when no Claude Code session is open on for this
-## run, without saving. --compact yes shows compact view for this run; --resize shrinks the window 8 s in, as a drag would.
+## run, without saving. The office starts in compact view; --large yes shows large view for this run; --resize shrinks the window 8 s in, as a drag would.
 ## A run with --snapshot never starts the server, so it cannot take the endpoint from the running app.
 ## Gaps between events keep their timing, each capped at 4 s and divided by `--speed`.
 
-## The office is shown at 110 pixels per meter when it fits, never under 70; half that in compact view.
+## The office is shown at 110 pixels per meter when it fits, never under 70, in large view; half that in compact view (the default).
 static var PIXELS_PER_METER := 110.0
 static var MIN_PIXELS_PER_METER := 70.0
 static var MIN_HEIGHT := 480
@@ -69,8 +69,8 @@ func _ready() -> void:
 	settings = TownSettings.new(_args.get("settings-file", ""))
 	# --language en|zh-Hant overrides the setting for this run (for checking screens).
 	labels = TownLabels.new(_args.get("language", settings.language))
-	# Compact view is read once here, so a change in Settings applies after a restart.
-	ViewScale.set_compact(settings.compact_view or _args.get("compact", "") == "yes")
+	# Compact view unless Large view is on; read once here, so a change in Settings applies after a restart.
+	ViewScale.set_compact(not (settings.large_view or _args.get("large", "") == "yes"))
 	PIXELS_PER_METER = 110.0 * ViewScale.world
 	MIN_PIXELS_PER_METER = 70.0 * ViewScale.world
 	MIN_HEIGHT = roundi(480 * ViewScale.world)

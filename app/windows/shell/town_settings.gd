@@ -18,7 +18,7 @@ var show_tips := true ## the closable tips in the window
 var hide_without_sessions := false ## the office window hides while no Claude Code session is open
 var hide_idle_blocks := false ## project blocks show only while they have work
 var idle_hide_seconds := 5 ## how long a block's work must have settled before it hides
-var compact_view := false ## the office at half size; applies after a restart
+var large_view := false ## the office at full size; off, it is in compact view (half size). Applies after a restart
 var check_updates := true ## check GitHub for a newer app and town-link once a day (spec: Updates)
 var last_update_check := 0 ## unix time of the last answered check; 0 before any
 var show_window := true
@@ -51,7 +51,8 @@ func _init(p_path: String = "") -> void:
 	hide_without_sessions = bool(_cfg.get_value("app", "hide_without_sessions", false))
 	hide_idle_blocks = bool(_cfg.get_value("app", "hide_idle_blocks", hide_idle_blocks))
 	idle_hide_seconds = clamp_idle_hide(_cfg.get_value("app", "idle_hide_seconds", 5))
-	compact_view = bool(_cfg.get_value("app", "compact_view", false))
+	# Compact view is the default since 1.0.8; the old "compact_view" key is no longer read.
+	large_view = bool(_cfg.get_value("app", "large_view", false))
 	check_updates = bool(_cfg.get_value("updates", "check_automatically", true))
 	last_update_check = int(_cfg.get_value("updates", "last_check", 0))
 	show_window = bool(_cfg.get_value("app", "show_window", show_window))
@@ -65,9 +66,10 @@ func _init(p_path: String = "") -> void:
 		sound_choice[key] = c if typeof(c) == TYPE_STRING and (c == "" or c.begins_with("media:") or c.begins_with("file:")) else ""
 
 
-## The saved place of the window in the view the app runs in. The first time in compact view: the
-## normal window's top-left corner, at half its height, and wide enough for the office at compact
-## view's full scale (`full_width` pixels).
+## The saved place of the window in the view the app runs in. The first time in compact view, when a
+## large-view place was saved (an install from before 1.0.8): its top-left corner, at half its
+## height, and wide enough for the office at compact view's full scale (`full_width` pixels). With
+## none saved, the window opens at the default width with the height fitted to the office.
 func use_view(compact: bool, full_width: int) -> void:
 	_window_section = "window_compact" if compact else "window"
 	if _cfg.has_section_key(_window_section, "position"):
@@ -128,7 +130,7 @@ func save() -> void:
 	_cfg.set_value("app", "hide_without_sessions", hide_without_sessions)
 	_cfg.set_value("app", "hide_idle_blocks", hide_idle_blocks)
 	_cfg.set_value("app", "idle_hide_seconds", idle_hide_seconds)
-	_cfg.set_value("app", "compact_view", compact_view)
+	_cfg.set_value("app", "large_view", large_view)
 	_cfg.set_value("updates", "check_automatically", check_updates)
 	_cfg.set_value("updates", "last_check", last_update_check)
 	_cfg.set_value("app", "show_window", show_window)
