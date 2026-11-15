@@ -11,7 +11,7 @@ The Partner Center account is an individual developer account. The product "Agen
 - Publisher display name: `Samson Chen`
 - Package family name: `SamsonChen.Agent-TownforClaudeCode_z4f7aag6y3hy2`
 - Store ID: `9N0G35LW0LNK`
-- Store page: https://apps.microsoft.com/detail/9N0G35LW0LNK (live since 2026-11-15, version 1.0.6)
+- Store page: https://apps.microsoft.com/detail/9N0G35LW0LNK (live since 2026-11-15, version 1.0.6; 1.0.8 live 2026-11-15)
 - winget: `winget install "Agent-Town for Claude Code"` (the full name; shorter ones found nothing on 2026-11-15) or `winget install 9N0G35LW0LNK` installs the Store version from the `msstore` source (`winget show --id 9N0G35LW0LNK --source msstore` lists it). No separate winget package is needed.
 
 These are public (they are in every installed package); they are not secrets.
@@ -69,6 +69,6 @@ Each Windows release can go to the Store too. The Store package and the installe
 3. In Partner Center, Apps and games → Agent-Town for Claude Code → **Start update**. This copies the last submission.
 4. **Packages:** remove the old `.msix` (the trash icon on its row) and upload the new one. Partner Center checks it; the version must be higher than the published one.
 5. **Store listings** (optional): "What's new in this version" can take the version's entry from `CHANGELOG/CHANGELOG_WINDOWS.md`. Change the description or screenshots only if the app looks different.
-6. **Submit to the Store.** Pricing, properties, age rating and the certification notes carry over. Store users get the new version automatically once it passes.
+6. **Submit to the Store.** Pricing, properties, age rating and the certification notes carry over. Store users get the new version automatically once it passes, but not at once: the Store checks for updates in the background, which can take from a few hours to a day after publishing. To get it right away: Microsoft Store → Library (Downloads) → Get updates. The app itself does not say a newer version exists (it never checks GitHub for a newer app).
 
 A product has one submission at a time. When a new version is ready while the last one is still in certification, either let that one finish and then submit the newest package (the usual way), or cancel it in Partner Center and submit the newest package instead, which starts certification over. Versions in between need not go to the Store: submit the newest one.
