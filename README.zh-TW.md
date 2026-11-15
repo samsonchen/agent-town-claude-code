@@ -106,7 +106,7 @@ App 每天會到 GitHub 檢查一次有沒有新版的 app 和 town-link（「�
 
 需要 Windows 11（x64）。也可以裝在 Windows 10，但 app 沒有在 Windows 10 上測試過。下面兩種方式擇一安裝，不要兩個都裝（兩份 app 會搶同一個與 town-link 的連線）：
 
-- **Microsoft Store**（建議）：安裝 [Agent-Town for Claude Code](https://apps.microsoft.com/detail/9N0G35LW0LNK)。Microsoft Store 會自動更新它。要讓它登入時自動啟動，按「設定」→ **登入時開啟…**，會打開 Windows 設定 →「應用程式」→「啟動」，在那裡把 agent-town 打開。移除：在「開始」選單對它按右鍵 →「解除安裝」。
+- **Microsoft Store**（建議）：安裝 [Agent-Town for Claude Code](https://apps.microsoft.com/detail/9N0G35LW0LNK)，或在終端機用 winget 安裝：`winget install 9N0G35LW0LNK`（第一次使用時，winget 會請你同意 Microsoft Store 的條款）。兩種做法裝的都是 Microsoft Store 版本，Microsoft Store 會自動更新它。要讓它登入時自動啟動，按「設定」→ **登入時開啟…**，會打開 Windows 設定 →「應用程式」→「啟動」，在那裡把 agent-town 打開。移除：在「開始」選單對它按右鍵 →「解除安裝」。
 - **安裝程式**：從 [Releases](https://github.com/samsonchen/agent-town-claude-code/releases) 找最新的 **agent-town for Windows**（標籤 `windows-v<版本>`），下載 `agent-town-setup-<版本>.exe` 並執行。它只安裝給你自己的帳號，不需要系統管理員權限，並會加到「開始」選單。安裝程式沒有程式碼簽章，所以第一次執行時 Windows 會顯示「Windows 已保護您的電腦」：按 **其他資訊**，再按 **仍要執行**。要讓它登入時自動啟動，打開「設定」→「登入時開啟」。更新：執行新版的安裝程式，它會取代已安裝的 app，並保留你的設定；「設定」→「更新」每天會檢查一次有沒有新的 Windows 版本，跟 Mac 一樣。移除：「設定」→「應用程式」→「已安裝的應用程式」→ agent-town →「解除安裝」。
 
 App 在系統匣（通知區域）裡，工作列上沒有按鈕；關掉辦公室視窗只是把它藏起來。Windows 11 一開始會把新的系統匣圖示放在隱藏的圖示裡（**^** 箭頭）；把它拖出來就會一直看得到。兩種安裝方式都會每天檢查一次有沒有新版的 town-link（「設定」→「更新」）。
