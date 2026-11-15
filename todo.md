@@ -254,8 +254,9 @@ The free way to a signed Windows app for now: the Store signs MSIX packages, so 
 - [x] The user: an individual Partner Center account, and the product "Agent-Town for Claude Code" reserved (Store ID `9N0G35LW0LNK`; identity in `store.md`).
 - [x] The package: `release.ps1 -Store` (preset "Windows x64 Store" with the feature `store`, manifest `app/windows/installer/msix/AppxManifest.xml`, `makeappx`). Tried with Developer Mode: the endpoint file lands in the real `%APPDATA%\agent-town-claude-code` (with and without the folder already there), and a `claude -p` session reached the app.
 - [x] A Store copy: no check for a newer app (the Store updates it; town-link is still checked), Open at login through the package's startup task (Windows Settings → Apps → Startup), and it never writes the `Run` key.
-- [ ] The user: look at a Store copy's Settings (the "Open at login…" button) and Updates window, then submit in Partner Center as `store.md` says (listing, screenshots, age rating, certification notes).
-- [ ] Once it is live: the README's and the web page's Windows install sections point to the Store first, with the installer as the other way.
+- [x] The user: submitted 1.0.6 in Partner Center as `store.md` says. Approved and live on 2026-11-15: https://apps.microsoft.com/detail/9N0G35LW0LNK
+- [x] The README's (both languages) and the web page's Windows install sections point to the Store first, with the installer as the other way (2026-11-15).
+- [ ] The user: submit the newest Windows version as an update (`store.md` → "Submitting an update").
 
 ### Shared material a second app needs
 

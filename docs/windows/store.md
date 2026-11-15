@@ -11,6 +11,7 @@ The Partner Center account is an individual developer account. The product "Agen
 - Publisher display name: `Samson Chen`
 - Package family name: `SamsonChen.Agent-TownforClaudeCode_z4f7aag6y3hy2`
 - Store ID: `9N0G35LW0LNK`
+- Store page: https://apps.microsoft.com/detail/9N0G35LW0LNK (live since 2026-11-15, version 1.0.6)
 
 These are public (they are in every installed package); they are not secrets.
 

@@ -60,5 +60,5 @@ Each feature is confirmed by the user in the running app before the release.
 
 
 - [ ] An Inno Setup installer `.exe` on GitHub Releases (built: `scripts/release.ps1`, `installer/agent-town.iss`, [releasing.md](releasing.md); 1.0.0 published 2026-11-13; 1.0.1 allows Windows 10), tagged `windows-v<version>`, titled "agent-town for Windows <version>", published with `--latest=false` so the macOS release stays "Latest"
-- [ ] The Microsoft Store (MSIX, signed by the Store): built by `release.ps1 -Store`, tried locally 2026-11-13; to submit ([store.md](store.md))
+- [x] The Microsoft Store (MSIX, signed by the Store): built by `release.ps1 -Store`; 1.0.6 live on 2026-11-15, https://apps.microsoft.com/detail/9N0G35LW0LNK ([store.md](store.md))
 - [ ] A `winget` package

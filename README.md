@@ -104,13 +104,12 @@ The app checks GitHub once a day for a newer app and a newer town-link (Settings
 
 ### The app on Windows
 
-Requires Windows 11 (x64). Windows 10 is allowed by the installer, but the app has not been tested on it. Download `agent-town-setup-<version>.exe` from the newest **agent-town for Windows** release on [Releases](https://github.com/samsonchen/agent-town-claude-code/releases) (tags `windows-v<version>`) and run it. It installs for your user only, with no administrator prompt, and adds agent-town to the Start menu.
+Requires Windows 11 (x64). Windows 10 is allowed, but the app has not been tested on it. Install it one of two ways, not both (the two copies would share the same connection to town-link):
 
-The installer is not code-signed, so Windows shows "Windows protected your PC" the first time: click **More info**, then **Run anyway**. A Microsoft Store version, which installs without that step, is on its way.
+- **Microsoft Store** (recommended): get [Agent-Town for Claude Code](https://apps.microsoft.com/detail/9N0G35LW0LNK). The Store keeps it up to date. To have it start when you sign in, click Settings → **Open at login…**, which opens Windows Settings → Apps → Startup, and turn agent-town on there. To remove it: right-click it in the Start menu → Uninstall.
+- **The installer:** download `agent-town-setup-<version>.exe` from the newest **agent-town for Windows** release on [Releases](https://github.com/samsonchen/agent-town-claude-code/releases) (tags `windows-v<version>`) and run it. It installs for your user only, with no administrator prompt, and adds agent-town to the Start menu. The installer is not code-signed, so Windows shows "Windows protected your PC" the first time: click **More info**, then **Run anyway**. To have it start when you sign in, turn on Settings → Open at login. To update, run the newer installer: it replaces the installed app and keeps your settings; Settings → Updates checks for a newer Windows release once a day, as on the Mac. To remove it: Settings → Apps → Installed apps → agent-town → Uninstall.
 
-The app lives in the tray (the notification area), with no taskbar button; closing the office window hides it. Windows 11 first puts a new tray icon among the hidden icons (the **^** arrow); drag it out to keep it in view. To have it start when you sign in, turn on Settings → Open at login.
-
-To update, run the newer installer: it replaces the installed app and keeps your settings. Settings → Updates checks for a newer Windows release once a day, as on the Mac. To remove it: Settings → Apps → Installed apps → agent-town → Uninstall.
+The app lives in the tray (the notification area), with no taskbar button; closing the office window hides it. Windows 11 first puts a new tray icon among the hidden icons (the **^** arrow); drag it out to keep it in view. Either copy checks once a day whether a newer town-link is out (Settings → Updates).
 
 Claude Code must run natively on Windows (the terminal, the Desktop app's Code tab, or VS Code). Sessions inside WSL can't reach the app.
 
