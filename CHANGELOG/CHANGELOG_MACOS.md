@@ -2,6 +2,10 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.16 (2026-11-15)
+
+- The office now starts in compact view (half size, for a laptop screen). Settings → Office has **Large view** (off by default) for the full-size office; it takes effect after a restart. This replaces the Compact view setting, so everyone starts in compact view until they turn on Large view.
+
 ## 1.0.15 (2026-11-14)
 
 - Break time: when a project has been idle for a while, the people on its bench find ways to pass the time. See for yourself. They stop as soon as work comes in, or when the CEO comes over to talk.

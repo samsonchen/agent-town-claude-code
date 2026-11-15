@@ -36,8 +36,9 @@ enum Prefs {
         let d = UserDefaults.standard // double(forKey:) also reads a number given as a launch argument
         return clampIdleHide(d.object(forKey: idleHideSeconds) == nil ? 5 : d.double(forKey: idleHideSeconds))
     }
-    /// Compact view: the office at half size, for a laptop screen. Default off. Applies after a restart.
-    static let compactView = "compactView"
+    /// Large view: the office at full size. Default off, so the office is drawn in compact view (half
+    /// size, for a laptop screen). Applies after a restart.
+    static let largeView = "largeView"
     /// Check GitHub for a newer app and town-link once a day. Default on (spec: Updates).
     static let checkForUpdatesKey = "checkForUpdates"
     static var checkForUpdates: Bool { isOn(checkForUpdatesKey) }
@@ -157,7 +158,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.idleHideSeconds) private var idleSeconds = 5.0
     @AppStorage(Prefs.showTips) private var showTips = true
     @AppStorage(Prefs.checkForUpdatesKey) private var checkUpdates = true
-    @AppStorage(Prefs.compactView) private var compact = false
+    @AppStorage(Prefs.largeView) private var large = false
     @State private var openAtLogin = LoginItem.isOn
     @State private var loginNote: String?
 
@@ -196,9 +197,9 @@ struct SettingsView: View {
                 }
             }
             Section(Labels.text("Office")) {
-                Toggle(Labels.text("Compact view"), isOn: $compact)
+                Toggle(Labels.text("Large view"), isOn: $large)
                 // The scale is set when the window is made, so a change needs a restart.
-                if compact != ViewScale.compact {
+                if large == ViewScale.compact {
                     HStack {
                         Text(Labels.text("Restart agent-town to change the view."))
                             .foregroundStyle(.secondary)
