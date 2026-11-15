@@ -155,8 +155,8 @@
           <h3>Mac</h3>
           <p class="small">macOS 15 or later. Signed and notarized by Apple.</p>
           <p>With <a href="https://brew.sh">Homebrew</a>:</p>
-          <pre>brew tap samsonchen/agent-town-claude-code https://github.com/samsonchen/agent-town-claude-code
-brew install --cask samsonchen/agent-town-claude-code/agent-town</pre>
+          <pre class="cmd">brew tap samsonchen/agent-town-claude-code https://github.com/samsonchen/agent-town-claude-code</pre>
+          <pre class="cmd">brew install --cask samsonchen/agent-town-claude-code/agent-town</pre>
           <p>Or download the <a href="https://github.com/samsonchen/agent-town-claude-code/releases/latest">latest .dmg</a> and drag Agent-Town into Applications. It lives in the menu bar.</p>
         </div>
         <div>
@@ -164,16 +164,17 @@ brew install --cask samsonchen/agent-town-claude-code/agent-town</pre>
           <p class="small">Windows 11. Installs for your user only, with no administrator prompt.</p>
           <p>Get it from the <a href="https://apps.microsoft.com/detail/9N0G35LW0LNK">Microsoft Store</a>, which keeps it up to date. It lives in the tray.</p>
           <p>Or the same Store version from a terminal, with winget:</p>
-          <pre>winget install "Agent-Town for Claude Code"</pre>
-          <p class="small">Or by its Store ID: <code>winget install 9N0G35LW0LNK</code></p>
+          <pre class="cmd">winget install "Agent-Town for Claude Code"</pre>
+          <p class="small">Or by its Store ID:</p>
+          <pre class="cmd">winget install 9N0G35LW0LNK</pre>
           <p class="small">Or download <code>agent-town-setup</code> from the newest <strong>agent-town for Windows</strong> release on the <a href="https://github.com/samsonchen/agent-town-claude-code/releases">Releases page</a>. The installer isn't code-signed, so Windows may show "Windows protected your PC": choose More info, then Run anyway. Install one or the other, not both.</p>
         </div>
         <div class="plugin">
           <h3>The Claude Code plugin</h3>
           <p class="small">Claude Code 2.1.287 or later, on the same computer as the app.</p>
           <p>In a Claude Code session, type:</p>
-          <pre>/plugin marketplace add samsonchen/agent-town-claude-code
-/plugin install town-link@agent-town-claude-code</pre>
+          <pre class="cmd">/plugin marketplace add samsonchen/agent-town-claude-code</pre>
+          <pre class="cmd">/plugin install town-link@agent-town-claude-code</pre>
           <p>Restart Claude Code, open the app, and give it a task.</p>
         </div>
       </div>
@@ -223,5 +224,6 @@ brew install --cask samsonchen/agent-town-claude-code/agent-town</pre>
   </div>
 </footer>
 
+<script src="copy.js" defer></script>
 </body>
 </html>

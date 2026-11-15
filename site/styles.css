@@ -178,6 +178,22 @@ pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* A command box with a Copy button (copy.js) */
+pre.cmd { position: relative; padding-right: 76px; }
+pre.cmd .copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font: 700 0.78rem var(--display, sans-serif);
+  color: #f3f4f8;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+pre.cmd .copy:hover { background: rgba(255, 255, 255, 0.26); }
+pre.cmd .copy:focus-visible { outline: 2px solid #f3f4f8; outline-offset: 2px; }
 
 /* FAQ */
 details { border-top: 2px solid rgba(38, 43, 56, 0.12); padding: 12px 0; }
