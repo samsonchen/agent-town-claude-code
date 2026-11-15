@@ -557,7 +557,8 @@ extension View {
 
     /// Moves the window to its saved frame, if that is still on a connected display; true if it did.
     /// The first time in compact view, the normal frame's top-left corner, at half its height and wide
-    /// enough for the office at compact view's full scale.
+    /// enough for the office at compact view's full scale. With no saved frame at all (a new
+    /// installation), compact view opens at the smallest size in the screen's top-right corner.
     @discardableResult static func restore(_ w: NSWindow) -> Bool {
         let d = UserDefaults.standard
         var r: NSRect
@@ -569,6 +570,12 @@ extension View {
             let full = CGFloat(2 * Layout.margin + Layout.blockWidth) * TownView.pixelsPerMeter
             let width = min(n.width, max(n.width / 2, full))
             r = NSRect(x: n.minX, y: n.maxY - n.height / 2, width: width, height: n.height / 2)
+        } else if ViewScale.compact, let screen = w.screen ?? NSScreen.main {
+            // A new installation: the smallest window, in the top-right corner of the screen.
+            let v = screen.visibleFrame
+            let m: CGFloat = 12
+            r = NSRect(x: v.maxX - TownView.minSize.width - m, y: v.maxY - TownView.minSize.height - m,
+                       width: TownView.minSize.width, height: TownView.minSize.height)
         } else {
             return false
         }

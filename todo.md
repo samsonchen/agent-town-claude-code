@@ -214,6 +214,14 @@ Built in the macOS app 1.0.8; `docs/spec.md` → The office has the details. The
 - [x] Strings: "Compact view" (精簡檢視) and "Restart agent-town to change the view." (重新啟動 agent-town 以切換檢視。), already in the shared `Localizable.strings` and synced.
 - [x] `run-local` options to match the Mac's: `-Compact` and `-Resize WxH` (8 seconds in, shrink the window as a drag would).
 
+### Windows app: a new installation opens small, top-right (asked 2026-11-16; macOS app 1.0.17)
+
+On the Mac, a new installation (no saved window frame) in compact view opens at the smallest window, 320 × 240, in the top-right corner of the screen's usable area (12 px in from the edges), instead of the default 860 × 720. The office auto-scrolls in it, and `fitWindow` leaves it that size (a saved size the user made shorter than the office is kept). Large view and installs that already have a saved frame are unchanged. Spec: `docs/spec.md` → The office, Compact view. Mac code: `WindowPlace.restore` in `app/macos/Sources/AgentTown/TownView.swift`.
+
+- [ ] When the Windows app finds no saved window frame (first run) and the view is compact (after "compact by default" below is done), set the window to 320 × 240 and place it in the top-right corner of the primary screen's usable area (`DisplayServer.screen_get_usable_rect`, which leaves out the taskbar), 12 px in from the edges. Skip the "grow to fit the office" step on that first run, as the Mac does.
+- [ ] Check: delete the settings file (the run's own, from `run-local.ps1`), run `-Demo`, and see the small window in the top-right corner; drag it larger, restart, and see it keep its size and place.
+- [ ] Docs: `docs/windows/` where the window is described, and the Windows changelog when it ships.
+
 ### Windows app: compact view by default, "Large view" setting (asked 2026-11-15; macOS app 1.0.16)
 
 Most users prefer compact view, so on the Mac the setting is reversed: the app starts in compact view, and Settings → Office → **Large view** (off by default) turns it off. Mac code: `ViewScale.compact` in `Layout.swift` (`!bool(forKey: "largeView")`), the toggle in `Preferences.swift`, `docs/spec.md` → The office. Checked on the Mac with a demo of each view (window height 836 vs 1410 points on fixture 05). The Windows app should do the same:
