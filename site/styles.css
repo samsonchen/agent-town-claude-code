@@ -179,21 +179,26 @@ pre {
   overflow-wrap: anywhere;
 }
 /* A command box with a Copy button (copy.js) */
-pre.cmd { position: relative; padding-right: 76px; }
+pre.cmd { position: relative; padding-right: 60px; }
 pre.cmd .copy {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  font: 700 0.78rem var(--display, sans-serif);
+  top: 8px;
+  bottom: 8px;
+  right: 0;
+  width: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   color: #f3f4f8;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 5px;
-  padding: 4px 9px;
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--call);
   cursor: pointer;
 }
-pre.cmd .copy:hover { background: rgba(255, 255, 255, 0.26); }
-pre.cmd .copy:focus-visible { outline: 2px solid #f3f4f8; outline-offset: 2px; }
+pre.cmd .copy svg { width: 18px; height: 18px; display: block; }
+pre.cmd .copy:hover { color: var(--hat); }
+pre.cmd .copy:focus-visible { outline: 2px solid #f3f4f8; outline-offset: -4px; }
 
 /* FAQ */
 details { border-top: 2px solid rgba(38, 43, 56, 0.12); padding: 12px 0; }
