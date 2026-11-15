@@ -25,7 +25,7 @@ Godot 4.7.2 (4.4 or later works), typed GDScript, in `app/windows/`. Scope: [spe
 - [x] Scenes 1 to 12 and 16: calls from the CEO (and the Dispatcher) and report calls, paging the bench, staff and operators at desks and consoles, reports and results (with "Failed"), approvals with the CEO's phone ringing, messages, desks carried in and out; checked with the fixtures. Desk workers are still to watch in a live session
 - [x] Context bar, block signs with task titles
 - [x] A sign whose task titles are wider than 20 columns scrolls sideways in a window 20 columns wide, as on macOS
-- [x] Sounds with the duration gate (wired; still to hear them in a live session)
+- [x] Sounds with the duration gate (wired; still to hear them in a live session). Not done on purpose: the macOS app plays a moment of silence before the first sound after a long idle (a USB speaker lost it); Windows may not have that problem, so check it by hand first (`todo.md` section 6; [spec.md](spec.md))
 - [x] Tray menu, Settings (language, open at login, stay on top, opacity), About; no taskbar button, close hides the window, its place is remembered (checked from outside the app)
 - [x] English and Traditional Chinese, Cubic 11
 - [x] Sound settings (`docs/spec.md` → Sounds → Sound settings; the Windows choices in [spec.md](spec.md)): volume; per sound an on/off switch, the sound (every WAV in `C:\Windows\Media`, or a WAV, MP3 or Ogg file of the user's own) and a Play button; the completion threshold
