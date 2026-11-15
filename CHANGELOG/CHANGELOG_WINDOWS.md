@@ -2,6 +2,11 @@
 
 What changed in each release of the Windows app. Each version is tagged `windows-v<version>` in this repository, and `git log windows-v<previous>..windows-v<version>` lists its commits. The macOS app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.9 (2026-11-16)
+
+- A new installation now opens at the smallest window size, in the top-right corner of the screen, instead of a big window. Drag it larger and it keeps that size and place.
+- In a narrow window, the tip at the bottom wraps onto a second line instead of running past the window's edges.
+
 ## 1.0.8 (2026-11-15)
 
 - The office now starts in compact view (half size, for a laptop screen). Settings → Office has **Large view** (off by default) for the full-size office; it takes effect after a restart. This replaces the Compact view setting, so everyone starts in compact view until they turn on Large view.

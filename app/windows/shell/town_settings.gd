@@ -69,7 +69,7 @@ func _init(p_path: String = "") -> void:
 ## The saved place of the window in the view the app runs in. The first time in compact view, when a
 ## large-view place was saved (an install from before 1.0.8): its top-left corner, at half its
 ## height, and wide enough for the office at compact view's full scale (`full_width` pixels). With
-## none saved, the window opens at the default width with the height fitted to the office.
+## none saved, main.gd opens the window at the smallest size in the screen's top-right corner (1.0.9).
 func use_view(compact: bool, full_width: int) -> void:
 	_window_section = "window_compact" if compact else "window"
 	if _cfg.has_section_key(_window_section, "position"):

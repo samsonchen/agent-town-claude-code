@@ -27,6 +27,8 @@ static var MIN_PIXELS_PER_METER := 70.0
 static var MIN_HEIGHT := 480
 ## The smallest window: a corner of a laptop screen. A window smaller than the office scrolls.
 const MIN_SIZE := Vector2i(320, 240)
+const TIP_SIDE_MARGIN := 10.0 ## the least room between the tip and the window's sides
+const NEW_WINDOW_INSET := 12 ## a new installation's window, in from the screen's top-right corner
 const AUTO_SCROLL_PAUSE := 10000 ## msec the user's own scrolling, or walking the CEO, holds auto-scroll off
 
 enum Menu { ABOUT, SHOW, ON_TOP, SOUND, SETTINGS, QUIT, APP_UPDATE, PLUGIN_UPDATE }
@@ -61,6 +63,7 @@ var _moving_until: Dictionary = {} ## id -> msec it still counts as walking
 var _auto_paused_until := 0
 var _auto_target: Variant = null ## Vector2 pan, or null
 var _auto_clock := 0.0
+var _opened_small := false ## a new installation: the smallest window, top-right, not grown to the office until the user resizes it
 
 
 func _ready() -> void:
@@ -288,7 +291,7 @@ func _build_tip() -> void:
 	row.add_child(close)
 	_office.add_child(_tip)
 	_tip.resized.connect(_place_tip)
-	get_window().size_changed.connect(_place_tip)
+	get_window().size_changed.connect(_fit_tip)
 	_update_tip()
 
 
@@ -299,6 +302,26 @@ func _update_tip() -> void:
 	var away := scene.ceo_driver != null and scene.ceo_driver.away
 	_tip_label.text = labels.t("Press H or click the CEO's desk to send the CEO back" if away
 		else "Move the CEO with the arrow keys ← ↑ ↓ → or click where to go")
+	_fit_tip()
+
+
+## The tip on one line when it fits; in a narrower window it wraps, so it never runs past the edges.
+func _fit_tip() -> void:
+	if _tip == null:
+		return
+	var font := _tip_label.get_theme_font("font")
+	var natural := font.get_string_size(_tip_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+	var row := _tip_label.get_parent() as HBoxContainer
+	var others := 0.0 # the close button, the spacing and the panel's margins
+	for child: Control in row.get_children():
+		if child != _tip_label:
+			others += child.get_combined_minimum_size().x + row.get_theme_constant("separation")
+	var panel := _tip.get_theme_stylebox("panel")
+	others += panel.content_margin_left + panel.content_margin_right
+	var room := float(get_window().size.x) - 2.0 * TIP_SIDE_MARGIN - others
+	var wraps := natural > room
+	_tip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wraps else TextServer.AUTOWRAP_OFF
+	_tip_label.custom_minimum_size.x = maxf(40.0, room) if wraps else 0.0
 	_tip.reset_size()
 	_place_tip()
 
@@ -503,9 +526,20 @@ func _apply_opacity(value: float) -> void:
 	_office.modulate.a = value
 
 
-## The window opens where it was, on the same display if it is still connected (spec).
+## The window opens where it was, on the same display if it is still connected (spec). With no saved
+## place at all (a new installation) in compact view, it opens at the smallest size in the top-right
+## corner of the primary screen's usable area, 12 px in from the edges (macOS app 1.0.17).
 func _restore_window() -> void:
 	var w := get_window()
+	if settings.window_position == null and settings.window_height <= 0 and ViewScale.compact and not _args.has("snapshot"):
+		var usable := DisplayServer.screen_get_usable_rect(DisplayServer.get_primary_screen())
+		w.size = MIN_SIZE
+		# Godot places the client area: the top inset is to the title bar's top. On the sides, Windows 11's
+		# resize borders are invisible, so the client area's right edge is where the frame is seen to end.
+		var title := w.position.y - w.get_position_with_decorations().y
+		w.position = Vector2i(usable.end.x - NEW_WINDOW_INSET - MIN_SIZE.x, usable.position.y + NEW_WINDOW_INSET + title)
+		_opened_small = true
+		return
 	if settings.window_position == null or settings.window_screen < 0 or settings.window_screen >= DisplayServer.get_screen_count():
 		return
 	var rect := DisplayServer.screen_get_usable_rect(settings.window_screen)
@@ -565,9 +599,12 @@ func _update_camera() -> void:
 ## height and auto-scrolls instead, so a small window on a laptop stays small.
 func _fit_window(before: Variant = null) -> void:
 	var w := get_window()
-	if w.mode != Window.MODE_WINDOWED:
+	# A new installation's smallest window stays that size, and the office auto-scrolls in it, until the
+	# user resizes it.
+	if w.mode != Window.MODE_WINDOWED or (_opened_small and w.size == MIN_SIZE):
 		_update_camera()
 		return
+	_opened_small = false
 	var ppm := minf(PIXELS_PER_METER, maxf(MIN_PIXELS_PER_METER, float(w.size.x) / maxf(1.0, scene.office_size.x)))
 	var usable := DisplayServer.screen_get_usable_rect(w.current_screen)
 	if before != null and (before as Vector2) != Vector2.ZERO:
