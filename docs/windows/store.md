@@ -54,6 +54,20 @@ In Partner Center, Apps and games → Agent-Town for Claude Code → Start submi
 5. **Store listings** (English, and Traditional Chinese if wanted): the description, screenshots (at least one, 1366×768 or larger), and a note that it needs Claude Code with the town-link plugin.
 6. **Submission options, notes for certification:** that the app shows Claude Code sessions and needs Claude Code with town-link to show anything beyond an empty office; that `runFullTrust` is needed because it is a desktop app with a tray icon and a local loopback server for the plugin.
 
-A later version: raise the version as [releasing.md](releasing.md) says, build with `-Store`, and upload the new package in a new submission. The version in the package must be higher than the published one.
+## Submitting an update
 
-A product has one submission at a time. When a new version is ready while the last one is still in certification, either let that one finish and then submit the new package (the usual way), or cancel it in Partner Center and submit the new package instead, which starts certification over. In a new submission, Packages: remove the old `.msix` and upload the new one; the listing and the other pages carry over.
+Each Windows release can go to the Store too. The Store package and the installer are built from the same commit and carry the same version.
+
+1. Make the Windows release as [releasing.md](releasing.md) says (the version raised, `release.ps1 -Publish`).
+2. Build the Store package from that commit:
+   ```powershell
+   git pull
+   .\app\windows\scripts\release.ps1 -Store
+   ```
+   It prints the package's path: `app\windows\build\store\agent-town-<version>.msix`.
+3. In Partner Center, Apps and games → Agent-Town for Claude Code → **Start update**. This copies the last submission.
+4. **Packages:** remove the old `.msix` (the trash icon on its row) and upload the new one. Partner Center checks it; the version must be higher than the published one.
+5. **Store listings** (optional): "What's new in this version" can take the version's entry from `CHANGELOG/CHANGELOG_WINDOWS.md`. Change the description or screenshots only if the app looks different.
+6. **Submit to the Store.** Pricing, properties, age rating and the certification notes carry over. Store users get the new version automatically once it passes.
+
+A product has one submission at a time. When a new version is ready while the last one is still in certification, either let that one finish and then submit the newest package (the usual way), or cancel it in Partner Center and submit the newest package instead, which starts certification over. Versions in between need not go to the Store: submit the newest one.
