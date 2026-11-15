@@ -28,5 +28,5 @@ Requirements: macOS 15 or later, or Windows 11; Claude Code 2.1.287 or later run
 ## Install
 
 - Mac: `brew tap samsonchen/agent-town-claude-code https://github.com/samsonchen/agent-town-claude-code` then `brew install --cask samsonchen/agent-town-claude-code/agent-town`, or the .dmg from Releases.
-- Windows: the Microsoft Store (https://apps.microsoft.com/detail/9N0G35LW0LNK; from a terminal: winget install 9N0G35LW0LNK), or the agent-town-setup installer from the newest "agent-town for Windows" release.
+- Windows: the Microsoft Store (https://apps.microsoft.com/detail/9N0G35LW0LNK; from a terminal: winget install "Agent-Town for Claude Code", or winget install 9N0G35LW0LNK), or the agent-town-setup installer from the newest "agent-town for Windows" release.
 - Claude Code plugin: `/plugin marketplace add samsonchen/agent-town-claude-code`, then `/plugin install town-link@agent-town-claude-code`.
