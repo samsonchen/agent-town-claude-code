@@ -63,7 +63,6 @@ var _moving_until: Dictionary = {} ## id -> msec it still counts as walking
 var _auto_paused_until := 0
 var _auto_target: Variant = null ## Vector2 pan, or null
 var _auto_clock := 0.0
-var _opened_small := false ## a new installation: the smallest window, top-right, not grown to the office until the user resizes it
 
 
 func _ready() -> void:
@@ -527,8 +526,9 @@ func _apply_opacity(value: float) -> void:
 
 
 ## The window opens where it was, on the same display if it is still connected (spec). With no saved
-## place at all (a new installation) in compact view, it opens at the smallest size in the top-right
-## corner of the primary screen's usable area, 12 px in from the edges (macOS app 1.0.17).
+## place at all (a new installation) in compact view, it opens at the smallest width in the top-right
+## corner of the primary screen's usable area, 12 px in from the edges (macOS app 1.0.17). Its height
+## then fits the office and follows it, as the user did not choose the size (_fit_window).
 func _restore_window() -> void:
 	var w := get_window()
 	if settings.window_position == null and settings.window_height <= 0 and ViewScale.compact and not _args.has("snapshot"):
@@ -538,7 +538,6 @@ func _restore_window() -> void:
 		# resize borders are invisible, so the client area's right edge is where the frame is seen to end.
 		var title := w.position.y - w.get_position_with_decorations().y
 		w.position = Vector2i(usable.end.x - NEW_WINDOW_INSET - MIN_SIZE.x, usable.position.y + NEW_WINDOW_INSET + title)
-		_opened_small = true
 		return
 	if settings.window_position == null or settings.window_screen < 0 or settings.window_screen >= DisplayServer.get_screen_count():
 		return
@@ -599,12 +598,9 @@ func _update_camera() -> void:
 ## height and auto-scrolls instead, so a small window on a laptop stays small.
 func _fit_window(before: Variant = null) -> void:
 	var w := get_window()
-	# A new installation's smallest window stays that size, and the office auto-scrolls in it, until the
-	# user resizes it.
-	if w.mode != Window.MODE_WINDOWED or (_opened_small and w.size == MIN_SIZE):
+	if w.mode != Window.MODE_WINDOWED:
 		_update_camera()
 		return
-	_opened_small = false
 	var ppm := minf(PIXELS_PER_METER, maxf(MIN_PIXELS_PER_METER, float(w.size.x) / maxf(1.0, scene.office_size.x)))
 	var usable := DisplayServer.screen_get_usable_rect(w.current_screen)
 	if before != null and (before as Vector2) != Vector2.ZERO:
