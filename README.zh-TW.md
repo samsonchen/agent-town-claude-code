@@ -1,12 +1,27 @@
 # Agent-Town for Claude Code
 
-看 Claude Code 的 agent 怎麼工作：一個 Claude Code plugin 加上一個 macOS 選單列 app（現在也有 Windows 版），把你的 session、subagent、背景工作和待核准的操作畫成一間小小的 3D 辦公室。（與其他名為 agent-town 的專案無關。）
+把 Claude Code 的工作畫成一間小小的 3D 辦公室，放在你的 Mac 選單列或 Windows 系統匣裡。
 
-網站：[samsonchen.github.io/agent-town-claude-code/zh-TW](https://samsonchen.github.io/agent-town-claude-code/zh-TW/)
+![agent-town 運作中：執行長辦公室裡有執行長、稽核員和調度員；下方的專案區塊有兩位幕僚長、職員的桌子、機房和休息區](docs/images/agent-town.gif)
 
-[English](README.md)
+agent-town 包含一個 Claude Code plugin（town-link）和一個 macOS、Windows 都有的 app。它們把你的 session、subagent、背景工作和待核准的操作，畫成從上往下看的辦公室，畫面受到 Gather Town 的啟發。你是執行長。每個 Claude Code session 是一位幕僚長，各自帶著自己的職員。你可以看著他們接你的工單、找職員來做事、在背景跑工作、等你核准，最後打電話回報。工作做完或需要你時，也會聽到聲音。
 
-agent-town 在 macOS 和 Windows 上把 Claude Code 的工作畫成一間小辦公室，從上往下看，裡面是 3D 角色。俯視的畫面受到 Gather Town 的啟發。你是執行長。每個 Claude Code session 是一位幕僚長，各自帶著自己的職員。你可以看著他們接你的工單、找職員來做事、在背景跑工作、等你核准，最後打電話回報。
+[網站](https://samsonchen.github.io/agent-town-claude-code/zh-TW/) · [Releases](https://github.com/samsonchen/agent-town-claude-code/releases) · [English](README.md)
+
+## 快速開始
+
+1. 安裝 app。macOS（15 以上）：
+
+   ```bash
+   brew tap samsonchen/agent-town-claude-code https://github.com/samsonchen/agent-town-claude-code
+   brew install --cask samsonchen/agent-town-claude-code/agent-town
+   ```
+
+   Windows：從 Microsoft Store 安裝 [Agent-Town for Claude Code](https://apps.microsoft.com/detail/9N0G35LW0LNK)。其他安裝方式請看[安裝](#2-安裝)。
+2. 在 Claude Code 裡加入 plugin：`/plugin marketplace add samsonchen/agent-town-claude-code`，接著 `/plugin install town-link@agent-town-claude-code`，然後重新啟動 Claude Code。
+3. 開啟 app，開始一個 Claude Code session，交給它一個工作。
+
+與其他名為 agent-town 的專案無關。
 
 ## 1. agent-town 是什麼
 
@@ -33,8 +48,6 @@ agent-town 在 macOS 和 Windows 上把 Claude Code 的工作畫成一間小辦�
 - 它不是衡量生產力的儀表板。它顯示正在發生什麼，不評斷做得好不好。
 - 它不控制 Claude Code。你一樣在終端機或 Claude 桌面 app 裡工作，agent-town 只負責看。
 - 它還沒做完。請看[已知問題](docs/known-issues.md)和 [roadmap](docs/roadmap.md)（英文）。
-
-![agent-town 運作中：執行長辦公室裡有執行長、稽核員和調度員；下方的專案區塊有兩位幕僚長、職員的桌子、機房和休息區](docs/images/agent-town.gif)
 
 ## 2. 安裝
 

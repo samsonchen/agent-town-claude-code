@@ -1,12 +1,27 @@
 # Agent-Town for Claude Code
 
-Watch your Claude Code agents at work: a Claude Code plugin and a macOS menu bar app (now on Windows too) that show your sessions, subagents, background tasks and approvals as a small 3D office. (Not related to other projects named agent-town.)
+Watch Claude Code work as a small 3D office, on your Mac menu bar or Windows tray.
 
-Website: [samsonchen.github.io/agent-town-claude-code](https://samsonchen.github.io/agent-town-claude-code/)
+![agent-town at work: the executive office with the CEO, the Inspector and the Dispatcher, and a project block with two Chiefs of Staff, the staff desks, the server room and the resource bench](docs/images/agent-town.gif)
 
-[繁體中文說明](README.zh-TW.md)
+agent-town is a Claude Code plugin (town-link) and an app for macOS and Windows. They draw your sessions, subagents, background tasks and approval requests as an office seen from above, inspired by Gather Town. You are the CEO. Each Claude Code session is a Chief of Staff with a staff of its own, and you can watch them take your tickets, call staff, run background jobs, wait for your approval and phone the report back. You also hear a sound when work is done or needs you.
 
-agent-town shows Claude Code's work as a small office on macOS and Windows, seen from above, with 3D characters. The top-down view was inspired by Gather Town. You are the CEO. Each Claude Code session is a Chief of Staff with a staff of its own, and you can watch them take your tickets, call staff, run background jobs, wait for your approval and phone the report back.
+[Website](https://samsonchen.github.io/agent-town-claude-code/) · [Releases](https://github.com/samsonchen/agent-town-claude-code/releases) · [繁體中文說明](README.zh-TW.md)
+
+## Quick start
+
+1. Install the app. On macOS (15 or later):
+
+   ```bash
+   brew tap samsonchen/agent-town-claude-code https://github.com/samsonchen/agent-town-claude-code
+   brew install --cask samsonchen/agent-town-claude-code/agent-town
+   ```
+
+   On Windows, get [Agent-Town for Claude Code](https://apps.microsoft.com/detail/9N0G35LW0LNK) from the Microsoft Store. Other ways to install are in [Installing](#2-installing).
+2. In Claude Code, add the plugin: `/plugin marketplace add samsonchen/agent-town-claude-code`, then `/plugin install town-link@agent-town-claude-code`, then restart Claude Code.
+3. Open the app, start a Claude Code session, and give it a task.
+
+Not related to other projects named agent-town.
 
 ## 1. What agent-town is
 
@@ -33,8 +48,6 @@ Nothing leaves your computer except a few short requests per task: town-link ask
 - It is not a dashboard for measuring productivity. It shows what is happening, not how well.
 - It does not control Claude Code. You still work in the terminal or the Claude desktop app; agent-town only watches.
 - It is not finished. See [Known issues](docs/known-issues.md) and the [roadmap](docs/roadmap.md).
-
-![agent-town at work: the executive office with the CEO, the Inspector and the Dispatcher, and a project block with two Chiefs of Staff, the staff desks, the server room and the resource bench](docs/images/agent-town.gif)
 
 ## 2. Installing
 
@@ -133,7 +146,7 @@ Claude Code must run natively on Windows (the terminal, the Desktop app's Code t
 
 The window shows one office building, seen from above. At the top is the executive office, where you, the CEO, sit beside the Inspector and the Dispatcher. Under it, each project you have open in Claude Code gets a block: its Chief of Staff (the session) takes your tickets, pages staff from the bench for each subagent, sends operators to the server room for background tasks, waits for your approval when Claude Code asks, and phones the report back. You hear a sound when work is dispatched, when it is done, and when your approval is needed.
 
-For a laptop screen, the office starts at half size (compact view; Settings has Large view for full size), and Settings has Hide idle project blocks, and Hide the window when no Claude Code session is open, and the window can be made small: the view then scrolls by itself to where people are walking.
+For a laptop screen, the office starts at half size (compact view; Settings has Large view for full size). Settings can also hide idle project blocks, and hide the window when no Claude Code session is open. The window can be made small: the view then scrolls by itself to where people are walking.
 
 The whole tour, with the settings: [The office](docs/office.md).
 
