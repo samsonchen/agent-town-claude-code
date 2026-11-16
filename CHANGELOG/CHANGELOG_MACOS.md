@@ -4,7 +4,7 @@ What changed in each release of the macOS app. Each version is tagged `v<version
 
 ## 1.0.17 (2026-11-16)
 
-- A new installation now opens at the smallest window size, in the top-right corner of the screen, instead of a big window. Drag it larger and it keeps that size and place.
+- A new installation now opens in the top-right corner of the screen at the smallest width, instead of a big window. Its height fits the office and follows it as project blocks come and go, until you resize the window yourself; then it keeps your size and place.
 
 ## 1.0.16 (2026-11-15)
 

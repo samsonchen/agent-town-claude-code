@@ -555,13 +555,15 @@ extension View {
     /// Compact view keeps its own frame, so turning it on or off brings back that view's size.
     static var key: String { ViewScale.compact ? Prefs.windowFrameCompact : Prefs.windowFrame }
 
-    /// Moves the window to its saved frame, if that is still on a connected display; true if it did.
+    /// Moves the window to its saved frame, if that is still on a connected display; true if it did
+    /// (false for a new installation's first placement, which the user has not sized).
     /// The first time in compact view, the normal frame's top-left corner, at half its height and wide
     /// enough for the office at compact view's full scale. With no saved frame at all (a new
-    /// installation), compact view opens at the smallest size in the screen's top-right corner.
+    /// installation), compact view opens at the smallest width in the screen's top-right corner; its height still fits the office.
     @discardableResult static func restore(_ w: NSWindow) -> Bool {
         let d = UserDefaults.standard
         var r: NSRect
+        var fresh = false
         if let s = d.string(forKey: key) {
             r = NSRectFromString(s)
         } else if ViewScale.compact, let s = d.string(forKey: Prefs.windowFrame) {
@@ -571,7 +573,8 @@ extension View {
             let width = min(n.width, max(n.width / 2, full))
             r = NSRect(x: n.minX, y: n.maxY - n.height / 2, width: width, height: n.height / 2)
         } else if ViewScale.compact, let screen = w.screen ?? NSScreen.main {
-            // A new installation: the smallest window, in the top-right corner of the screen.
+            // A new installation: the smallest width, in the top-right corner of the screen.
+            fresh = true
             let v = screen.visibleFrame
             let m: CGFloat = 12
             r = NSRect(x: v.maxX - TownView.minSize.width - m, y: v.maxY - TownView.minSize.height - m,
@@ -584,7 +587,7 @@ extension View {
         guard NSScreen.screens.contains(where: { $0.visibleFrame.intersection(r).width >= 100 && $0.visibleFrame.intersection(r).height >= 100 })
         else { return false }
         w.setFrame(r, display: true)
-        return true
+        return !fresh // a placed new window is not a size the user made: it still grows to fit the office
     }
 
     /// Saves the frame each time the window moves or is resized.
