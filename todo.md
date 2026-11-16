@@ -273,7 +273,7 @@ The free way to a signed Windows app for now: the Store signs MSIX packages, so 
 - [x] A Store copy: no check for a newer app (the Store updates it; town-link is still checked), Open at login through the package's startup task (Windows Settings → Apps → Startup), and it never writes the `Run` key.
 - [x] The user: submitted 1.0.6 in Partner Center as `store.md` says. Approved and live on 2026-11-15: https://apps.microsoft.com/detail/9N0G35LW0LNK
 - [x] The README's (both languages) and the web page's Windows install sections point to the Store first, with the installer as the other way (2026-11-15).
-- [x] 1.0.8 submitted as an update on 2026-11-15 (the description's "you approval" typo fixed too); it passed certification and went live the same day. Later versions: `store.md` → "Submitting an update".
+- [x] 1.0.8 submitted as an update on 2026-11-15 (the description's "you approval" typo fixed too); it passed certification and went live the same day. 1.0.9 passed certification on 2026-11-16; 1.0.10 (package built from `d853442`) is next. Later versions: `store.md` → "Submitting an update".
 
 ### Shared material a second app needs
 
