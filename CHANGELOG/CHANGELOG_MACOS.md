@@ -2,6 +2,10 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.18 (2026-11-16)
+
+- The tip at the bottom of the window wraps inside a narrow window instead of running past its edges.
+
 ## 1.0.17 (2026-11-16)
 
 - A new installation now opens in the top-right corner of the screen at the smallest width, instead of a big window. Its height fits the office and follows it as project blocks come and go, until you resize the window yourself; then it keeps your size and place.

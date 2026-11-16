@@ -173,7 +173,7 @@ struct TownView: View {
                 }
             }
             .onChange(of: opacity) { _, v in window?.alphaValue = Prefs.clampOpacity(v) } // live while the slider moves
-            .overlay(alignment: .bottomLeading) { tip.padding([.leading, .bottom], 12) } // clear of the context bar under a block
+            .overlay(alignment: .bottomLeading) { tip.padding([.horizontal, .bottom], 12) } // clear of the context bar under a block
             .background(WindowReader { w in
                 guard let w else { return }
                 w.alphaValue = Prefs.clampOpacity(opacity) // also when the window opens or is made again
@@ -499,6 +499,7 @@ struct TipBar: View {
         HStack(spacing: 8) {
             Image(systemName: "keyboard")
             Text(text).font(.system(size: 12, weight: .medium))
+                .fixedSize(horizontal: false, vertical: true) // wraps in a narrow window instead of running past its edges
             Button(action: close) {
                 Image(systemName: "xmark").font(.system(size: 10, weight: .bold))
             }
@@ -508,7 +509,7 @@ struct TipBar: View {
         .foregroundStyle(.white)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(Capsule().fill(Color.black.opacity(0.7)))
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.black.opacity(0.7))) // a capsule on one line
     }
 }
 
