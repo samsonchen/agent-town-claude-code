@@ -2,6 +2,11 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.19 (2026-11-17)
+
+- A character's statement (what the CEO hears when walking up to them) is drawn above the context bars, not under them.
+- Fixed the CEO getting stuck against the server racks on a long click-to-walk: the route could graze the padded edge of a rack row and the CEO stopped pressed against it.
+
 ## 1.0.18 (2026-11-16)
 
 - The tip at the bottom of the window wraps inside a narrow window instead of running past its edges.

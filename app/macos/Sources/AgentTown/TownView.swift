@@ -143,8 +143,9 @@ struct TownView: View {
                 TimelineView(.animation) { _ in
                     ZStack(alignment: .topLeading) {
                         CallLines(lines: scene.callLines(), projector: proj)
-                        LabelOverlay(items: scene.labelItems(), projector: proj)
                         MeterOverlay(items: scene.meterItems(), projector: proj)
+                        // After the context bars, so a statement or tag is never hidden under one.
+                        LabelOverlay(items: scene.labelItems(), projector: proj)
                     }
                 }
                 .allowsHitTesting(false)

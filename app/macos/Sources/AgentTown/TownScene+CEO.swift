@@ -400,7 +400,13 @@ extension TownScene {
         // Straighten: skip every point the CEO can walk past in a straight line.
         func clear(_ p: SIMD2<Float>, _ q: SIMD2<Float>) -> Bool {
             let n = max(1, Int(simd_distance(p, q) / 0.05))
-            return (0...n).allSatisfy { !wall[index(p + (q - p) * Float($0) / Float(n))] }
+            // The grid's cells are 0.1 wide, so a point can sit in a free cell and still be up to half a
+            // cell inside furniture's padded rectangle: also test the exact rectangles, or the CEO is
+            // sent along a line that grazes a rack and gets stuck pressed against it.
+            return (0...n).allSatisfy {
+                let t = p + (q - p) * Float($0) / Float(n)
+                return !wall[index(t)] && !rects.contains { Self.inside(t, $0, pad: Self.ceoRadius + 0.02) }
+            }
         }
         var out: [SIMD2<Float>] = []
         var k = 0
