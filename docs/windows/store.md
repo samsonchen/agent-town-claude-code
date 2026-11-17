@@ -11,7 +11,7 @@ The Partner Center account is an individual developer account. The product "Agen
 - Publisher display name: `Samson Chen`
 - Package family name: `SamsonChen.Agent-TownforClaudeCode_z4f7aag6y3hy2`
 - Store ID: `9N0G35LW0LNK`
-- Store page: https://apps.microsoft.com/detail/9N0G35LW0LNK (live since 2026-11-15, version 1.0.6; 1.0.8 live 2026-11-15; 1.0.9 passed certification 2026-11-16; 1.0.10 passed certification 2026-11-16)
+- Store page: https://apps.microsoft.com/detail/9N0G35LW0LNK (live since 2026-11-15, version 1.0.6; 1.0.8 live 2026-11-15; 1.0.9 passed certification 2026-11-16; 1.0.10 passed certification 2026-11-16; 1.0.11 to be submitted)
 - winget: `winget install "Agent-Town for Claude Code"` (the full name; shorter ones found nothing on 2026-11-15) or `winget install 9N0G35LW0LNK` installs the Store version from the `msstore` source (`winget show --id 9N0G35LW0LNK --source msstore` lists it). No separate winget package is needed.
 
 These are public (they are in every installed package); they are not secrets.
