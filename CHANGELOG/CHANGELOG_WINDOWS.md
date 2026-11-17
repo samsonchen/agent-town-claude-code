@@ -2,6 +2,11 @@
 
 What changed in each release of the Windows app. Each version is tagged `windows-v<version>` in this repository, and `git log windows-v<previous>..windows-v<version>` lists its commits. The macOS app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.11 (2026-11-17)
+
+- Name tags, statements (what the CEO hears when walking up to someone) and signs are drawn above the context bars, not under them.
+- Fixed the CEO getting stuck against the server racks on a long click-to-walk: the route could graze the edge of a rack row, and the CEO stopped pressed against it.
+
 ## 1.0.10 (2026-11-16)
 
 - A new installation's window, at the smallest width in the top-right corner, now grows and shrinks with the office as project blocks come and go, until you resize it yourself, as on the Mac. In 1.0.9 it stayed 320 × 240 and scrolled.

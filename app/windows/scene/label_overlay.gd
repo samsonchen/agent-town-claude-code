@@ -92,21 +92,25 @@ func _draw() -> void:
 			continue
 		draw_dashed_line(camera.unproject_position(a), camera.unproject_position(b), CALL_COLOR, 2.0, 6.0)
 	var seen: Array = []
-	for item: Dictionary in scene.label_items():
+	var items := scene.label_items()
+	# The context bars first, then the tags, statements and signs, so none is hidden under a bar.
+	for item: Dictionary in items:
+		if item.get("meter", false) and not camera.is_position_behind(item["anchor"]):
+			_draw_meter(camera.unproject_position(item["anchor"]).round(), item)
+	for item: Dictionary in items:
+		if item.get("meter", false):
+			continue
 		var anchor: Vector3 = item["anchor"]
 		if camera.is_position_behind(anchor):
 			continue
 		var p := camera.unproject_position(anchor).round()
 		# A tag whose character is well above the window (scrolled out of view) is not shown; one
 		# just above slides down to stay in view.
-		if p.y <= -20.0 and not item.get("meter", false):
+		if p.y <= -20.0:
 			continue
 		if item.get("scroll", false):
 			seen.append(item["id"])
 			_place_scroller(item["id"], item["lines"][0][0], p)
-			continue
-		if item.get("meter", false):
-			_draw_meter(p, item)
 			continue
 		var lines: Array = item["lines"]
 		if lines.size() == 1 and lines[0][1] == "sign":

@@ -45,3 +45,30 @@ func test_a_path_goes_around_a_desk() -> void:
 				failures.append("the path crosses the desk at %s" % q)
 				return
 		prev = p
+
+
+## Straightened legs keep the CEO's radius from furniture, also where a rack's edge falls between the
+## grid's cells (the Mac found the CEO stuck against a server rack: macOS app 1.0.19).
+func test_straightened_paths_never_graze_furniture() -> void:
+	var racks: Array[Rect2] = [Rect2(1.03, 3.07, 2.46, 0.38), Rect2(1.03, 4.27, 2.46, 0.38), Rect2(5.12, 6.04, 0.53, 1.66)]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 17
+	for trial in 300:
+		var a: Variant = FloorPlan.free_spot(Vector2(rng.randf_range(0.2, 8.6), rng.randf_range(0.2, 9.8)), SIZE, racks, R)
+		var b: Variant = FloorPlan.free_spot(Vector2(rng.randf_range(0.2, 8.6), rng.randf_range(0.2, 9.8)), SIZE, racks, R)
+		if a == null or b == null:
+			continue
+		var prev: Vector2 = a
+		for p in FloorPlan.find_path(a, b, SIZE, racks, R):
+			var n := maxi(1, int(prev.distance_to(p) / 0.01))
+			for k in n + 1:
+				var q := prev + (p - prev) * float(k) / n
+				# Near the start and the goal the CEO may squeeze past (the desk spot is tight): cells within
+				# 0.3 m of them are free, and a point on such a cell can be a little farther.
+				if q.distance_to(a) < 0.4 or q.distance_to(b) < 0.4:
+					continue
+				for r in racks:
+					if FloorPlan.inside(q, r, R):
+						failures.append("from %s to %s, the path grazes %s at %s" % [a, b, r, q])
+						return
+			prev = p

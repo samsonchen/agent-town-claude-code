@@ -6,6 +6,7 @@ extends RefCounted
 ## app/macos/Sources/AgentTown/TownScene+CEO.swift.
 
 const CELL := 0.1 ## the path grid, in meters
+const STRAIGHT_LINE_MARGIN := 0.02 ## room beyond the padded furniture when straightening a path
 
 
 ## `p` moved inside a floor of `size` (from the origin), keeping `radius` from the edge.
@@ -101,13 +102,19 @@ static func find_path(a: Vector2, b: Vector2, size: Vector2, rects: Array[Rect2]
 	for i in range(1, cells.size()):
 		points.append(cells[i])
 	points.append(b)
-	# Straighten: skip every point the CEO can walk past in a straight line.
+	# Straighten: skip every point the CEO can walk past in a straight line. A point can sit in a free
+	# cell and still be up to half a cell inside furniture's padded rectangle, so the exact rectangles
+	# are tested too, or the CEO is sent along a line that grazes a rack and gets stuck against it.
 	var clear := func(p: Vector2, q: Vector2) -> bool:
 		var n := maxi(1, int(p.distance_to(q) / 0.05))
 		for k in n + 1:
-			var c: Vector2i = cell.call(p + (q - p) * float(k) / n)
+			var t := p + (q - p) * float(k) / n
+			var c: Vector2i = cell.call(t)
 			if wall[c.x + c.y * cols] == 1:
 				return false
+			for r in rects:
+				if inside(t, r, radius + STRAIGHT_LINE_MARGIN):
+					return false
 		return true
 	var out: Array[Vector2] = []
 	var k := 0
