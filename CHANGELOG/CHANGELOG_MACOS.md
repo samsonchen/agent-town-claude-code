@@ -2,6 +2,10 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.20 (2026-11-17)
+
+- A statement card is drawn above the block signs ("Executive office", project names) and every other tag, so a sign no longer covers it.
+
 ## 1.0.19 (2026-11-17)
 
 - A character's statement (what the CEO hears when walking up to them) is drawn above the context bars, not under them.

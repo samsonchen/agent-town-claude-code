@@ -243,6 +243,8 @@ struct LabelOverlay: View {
     /// Space kept between the window's top and the highest tag.
     static let topMargin: CGFloat = 6
 
+    static func hasStatement(_ item: TownScene.LabelItem) -> Bool { item.lines.contains { $0.1 == .statement } }
+
     /// The height of a stack of tags.
     static func height(_ item: TownScene.LabelItem) -> CGFloat {
         if item.scroll { return Tag.height("n", .sign) }
@@ -254,7 +256,10 @@ struct LabelOverlay: View {
         ZStack(alignment: .topLeading) {
             // A tag whose character is well above the window (scrolled out of view) is not shown;
             // one just above slides down to stay in view.
-            ForEach(items.filter { projector.screen($0.anchor).y > -20 }, id: \.id) { item in
+            // A statement card is drawn last, so no sign or other tag covers it.
+            let shown = items.filter { projector.screen($0.anchor).y > -20 }
+            let ordered = shown.filter { !Self.hasStatement($0) } + shown.filter(Self.hasStatement)
+            ForEach(ordered, id: \.id) { item in
                 let p = projector.screen(item.anchor)
                 let isSign = item.lines.first?.1 == .sign
                 Group {
