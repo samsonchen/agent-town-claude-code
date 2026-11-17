@@ -27,6 +27,19 @@ var camera: Camera3D
 var font: FontFile
 var _boxes: Dictionary = {} ## style -> StyleBoxFlat
 var _scrollers: Dictionary = {} ## sign id -> ScrollingSign
+var _top: TopLayer ## statement cards, above everything else, scrolling signs included
+var _late: Array = [] ## [screen point, lines] of the tags with a statement, drawn on _top
+var _canvas: CanvasItem = self ## where _draw_tag draws: this overlay, or _top for the statements
+
+
+## Statement cards, drawn last: above the other tags, the context bars and the scrolling signs
+## (child controls, which are drawn over the overlay's own drawing). As in the macOS app 1.0.20.
+class TopLayer:
+	extends Control
+	var overlay: LabelOverlay
+
+	func _draw() -> void:
+		overlay._draw_late(self)
 
 
 ## A block sign whose task titles are too wide: the whole sign scrolls sideways in a window
@@ -77,10 +90,16 @@ func _init(p_scene: TownScene, p_camera: Camera3D) -> void:
 	font.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_top = TopLayer.new()
+	_top.overlay = self
+	_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_top.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_top)
 
 
 func _process(_delta: float) -> void:
 	queue_redraw()
+	_top.queue_redraw()
 
 
 func _draw() -> void:
@@ -92,6 +111,7 @@ func _draw() -> void:
 			continue
 		draw_dashed_line(camera.unproject_position(a), camera.unproject_position(b), CALL_COLOR, 2.0, 6.0)
 	var seen: Array = []
+	_late.clear()
 	var items := scene.label_items()
 	# The context bars first, then the tags, statements and signs, so none is hidden under a bar.
 	for item: Dictionary in items:
@@ -113,19 +133,34 @@ func _draw() -> void:
 			_place_scroller(item["id"], item["lines"][0][0], p)
 			continue
 		var lines: Array = item["lines"]
+		if lines.any(func(l: Array) -> bool: return l[1] == "statement"):
+			_late.append([p, lines])
+			continue
 		if lines.size() == 1 and lines[0][1] == "sign":
 			_draw_tag(p, lines[0][0], "sign", true)
 			continue
-		# Tags stack upward from the anchor, the last line nearest the head.
-		var y := maxf(p.y, _stack_height(lines) + 2.0)
-		for i in range(lines.size() - 1, -1, -1):
-			var h := _draw_tag(Vector2(p.x, y), lines[i][0], lines[i][1], false)
-			y -= h + 2.0
+		_draw_stack(p, lines)
 	# A sign that no longer scrolls (or whose block went) loses its scroller.
 	for id: String in _scrollers.keys():
 		if not seen.has(id):
 			(_scrollers[id] as Node).queue_free()
 			_scrollers.erase(id)
+
+
+## Tags stack upward from the anchor, the last line nearest the head.
+func _draw_stack(p: Vector2, lines: Array) -> void:
+	var y := maxf(p.y, _stack_height(lines) + 2.0)
+	for i in range(lines.size() - 1, -1, -1):
+		var h := _draw_tag(Vector2(p.x, y), lines[i][0], lines[i][1], false)
+		y -= h + 2.0
+
+
+## The tags with a statement, on the top layer (called from its _draw).
+func _draw_late(on: CanvasItem) -> void:
+	_canvas = on
+	for late: Array in _late:
+		_draw_stack(late[0], late[1])
+	_canvas = self
 
 
 ## The height of a stack of tags, for keeping its top in the window.
@@ -151,6 +186,7 @@ func _place_scroller(id: String, text: String, at: Vector2) -> void:
 		sc.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(sc)
 		_scrollers[id] = sc
+		move_child(_top, -1) # statements stay above every sign
 	sc.text = text
 	var w := font.get_string_size("n".repeat(TownLabels.TITLE_WIDTH), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x + 10.0
 	var h := font.get_height(FONT_SIZE) + 4.0
@@ -168,9 +204,9 @@ func _draw_tag(at: Vector2, text: String, style: String, centered: bool) -> floa
 	if centered:
 		rect.position.y = at.y - rect.size.y / 2.0
 	rect.position = rect.position.round()
-	draw_style_box(_box(style), rect)
+	_canvas.draw_style_box(_box(style), rect)
 	var color := Color.BLACK if style in DARK_TEXT else Color.WHITE
-	draw_string(font, rect.position + Vector2(pad.x, pad.y + font.get_ascent(FONT_SIZE)), text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+	_canvas.draw_string(font, rect.position + Vector2(pad.x, pad.y + font.get_ascent(FONT_SIZE)), text, HORIZONTAL_ALIGNMENT_LEFT, -1,
 		FONT_SIZE, color)
 	return rect.size.y
 
@@ -189,8 +225,8 @@ func _draw_statement(at: Vector2, text: String) -> float:
 		box.border_color = CALL_COLOR
 		box.set_border_width_all(2)
 		_boxes["statement"] = box
-	draw_style_box(_boxes["statement"], rect)
-	draw_multiline_string(font, rect.position + Vector2(pad.x, pad.y + font.get_ascent(FONT_SIZE)), text, HORIZONTAL_ALIGNMENT_LEFT,
+	_canvas.draw_style_box(_boxes["statement"], rect)
+	_canvas.draw_multiline_string(font, rect.position + Vector2(pad.x, pad.y + font.get_ascent(FONT_SIZE)), text, HORIZONTAL_ALIGNMENT_LEFT,
 		w, FONT_SIZE, -1, Color.BLACK)
 	return rect.size.y
 

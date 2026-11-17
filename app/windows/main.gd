@@ -7,7 +7,7 @@ extends Node
 ## (port of app/macos/Sources/AgentTown/Demo.swift):
 ##   godot --path app/windows -- --demo ../../protocol/fixtures/01-basic-ticket.json [--speed N]
 ##         [--snapshot out.png --at SECONDS[,SECONDS…]] [--language en|zh-Hant] [--open settings|about]
-##         [--keys "down:1.5,right:1,h"] [--clicks "95:270@2,300:500@6"] [--hide-idle SECONDS]
+##         [--keys "down:1.5,right:1,h"] [--clicks "95:270@2,300:500@6"] [--ceo-goto "2,5.7;6,9@8"] [--hide-idle SECONDS]
 ##         [--large yes] [--resize WxH] [--fake-update yes] [--check-now yes] [--open updates]
 ##         [--hide-without-sessions yes] [--break-idle SECONDS] [--break-pastime NAME]
 ## [--sound no] keeps this run quiet; [--settings-file PATH] uses its own settings; --open takes
@@ -185,6 +185,8 @@ func _ready() -> void:
 		_press_keys(_args["keys"])
 	if _args.has("clicks"):
 		_click_at(_args["clicks"])
+	if _args.has("ceo-goto"):
+		_ceo_goto(_args["ceo-goto"])
 	if _args.has("snapshot"):
 		_snapshot_later(_args["snapshot"], _args.get("at", "3"))
 
@@ -722,6 +724,21 @@ func _press_keys(spec: String) -> void:
 			if pressed:
 				await get_tree().create_timer(hold).timeout
 		await get_tree().create_timer(0.2).timeout
+
+
+## `--ceo-goto "x,z;x,z@seconds"` walks the CEO to each office point (meters on the floor) in turn,
+## starting at `seconds` (1 when left out), for checking the walk and what the CEO is told. As the
+## Mac's TOWN_CEO_GOTO.
+func _ceo_goto(spec: String) -> void:
+	var parts := spec.split("@")
+	await get_tree().create_timer(float(parts[1]) if parts.size() > 1 else 1.0).timeout
+	for pair: String in parts[0].split(";", false):
+		var v := pair.split(",")
+		if v.size() != 2:
+			continue
+		scene.ceo_driver.walk_to(Vector2(float(v[0]), float(v[1])))
+		while scene.ceo_driver.walking():
+			await get_tree().create_timer(0.05).timeout
 
 
 ## `--clicks "95:270@2,300:500@6"` clicks the left mouse button at window pixels x:y at each time

@@ -5,6 +5,7 @@ What changed in each release of the Windows app. Each version is tagged `windows
 ## 1.0.11 (2026-11-17)
 
 - Name tags, statements (what the CEO hears when walking up to someone) and signs are drawn above the context bars, not under them.
+- A statement card is drawn above the block signs ("Executive office", project names) and every other tag, so nothing covers it.
 - Fixed the CEO getting stuck against the server racks on a long click-to-walk: the route could graze the edge of a rack row, and the CEO stopped pressed against it.
 
 ## 1.0.10 (2026-11-16)

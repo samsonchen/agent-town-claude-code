@@ -216,6 +216,11 @@ func walk_to(goal: Vector2, arrived: Callable = Callable()) -> void:
 	_stalls = 0
 
 
+## True while the CEO is on a walk from walk_to (or a click).
+func walking() -> bool:
+	return not _trip.is_empty()
+
+
 ## The CEO's mobile, held in the hand while away from the desk.
 func make_mobile() -> void:
 	var c := ceo()
