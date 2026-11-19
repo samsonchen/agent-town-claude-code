@@ -14,6 +14,7 @@ The project has two parts:
 | [office.md](office.md) | A tour of the office: who sits where, what each one does, the sounds and the settings |
 | [known-issues.md](known-issues.md) | Known issues and limitations, and which Claude surfaces it works in |
 | [privacy.md](privacy.md) | What town-link reads and sends, and what each of its hooks does |
+| [uninstall.md](uninstall.md) | Removing agent-town: the app and the town-link plugin, on macOS and Windows |
 | [development.md](development.md) | Developing: the repository, running from source, checks, trying a change, versions and releasing |
 | [spec.md](spec.md) | What the user sees and hears, the decisions made so far, and the settings |
 | [architecture.md](architecture.md) | The components, how events flow, and how the mod and the app are built |

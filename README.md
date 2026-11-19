@@ -18,7 +18,16 @@ agent-town is a Claude Code plugin (town-link) and an app for macOS and Windows.
    ```
 
    On Windows, get [Agent-Town for Claude Code](https://apps.microsoft.com/detail/9N0G35LW0LNK) from the Microsoft Store. Other ways to install are in [Installing](#2-installing).
-2. In Claude Code, add the plugin: `/plugin marketplace add samsonchen/agent-town-claude-code`, then `/plugin install town-link@agent-town-claude-code`, then restart Claude Code.
+2. In Claude Code, add the plugin, then restart Claude Code:
+
+   ```
+   /plugin marketplace add samsonchen/agent-town-claude-code
+   ```
+
+   ```
+   /plugin install town-link@agent-town-claude-code
+   ```
+
 3. Open the app, start a Claude Code session, and give it a task.
 
 Not related to other projects named agent-town.
@@ -154,6 +163,7 @@ The whole tour, with the settings: [The office](docs/office.md).
 
 - [Known issues and where it works](docs/known-issues.md): what may not show, and which Claude surfaces work (terminal, the Desktop app's Code tab, VS Code; not cloud sessions or Cowork)
 - [What town-link reads and sends](docs/privacy.md): events to the app on your own computer, and a few short Haiku requests per task on your own plan; nothing else
+- [Uninstalling agent-town](docs/uninstall.md): removing the app and the plugin, on macOS and Windows
 - [Developing agent-town](docs/development.md): running it from source, the checks, trying a change, and releasing
 - What changed in each version: [macOS app](CHANGELOG/CHANGELOG_MACOS.md), [Windows app](CHANGELOG/CHANGELOG_WINDOWS.md), [town-link](CHANGELOG/CHANGELOG_PLUGIN.md)
 - [All documents](docs/README.md): the spec, the architecture, the protocol, the roadmap
