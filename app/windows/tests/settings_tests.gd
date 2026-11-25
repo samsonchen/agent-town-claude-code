@@ -64,46 +64,26 @@ func test_office_settings_survive_a_restart_and_stay_in_range() -> void:
 	DirAccess.remove_absolute(path.get_base_dir())
 
 
-func test_compact_view_keeps_its_own_window_size() -> void:
-	var path := OS.get_temp_dir().path_join("agent-town-claude-code-test-%d" % randi()).path_join("settings.cfg")
-	var fresh := TownSettings.new(path)
-	check_eq(fresh.large_view, false, "large view off by default: the office starts compact")
-	fresh.use_view(true, 484)
-	check_eq(fresh.window_position, null, "a new install has no saved place in compact view")
-	var a := TownSettings.new(path)
-	a.use_view(false, 968)
-	a.window_position = Vector2i(100, 50)
-	a.window_width = 968
-	a.window_height = 900
-	a.window_screen = 0
-	a.save()
-	var b := TownSettings.new(path)
-	b.use_view(true, 484)
-	check_eq([b.large_view, b.window_position, b.window_width, b.window_height], [false, Vector2i(100, 50), 484, 450],
-		"first time compact after large: half the height, wide enough for the office at the compact scale")
-	b.window_width = 500
-	b.window_height = 300
-	b.save()
-	var c := TownSettings.new(path)
-	c.use_view(true, 484)
-	check_eq([c.window_width, c.window_height], [500, 300], "compact keeps its own size")
-	var d := TownSettings.new(path)
-	d.use_view(false, 968)
-	check_eq([d.window_width, d.window_height], [968, 900], "the normal size is untouched")
-	DirAccess.remove_absolute(path)
-	DirAccess.remove_absolute(path.get_base_dir())
-
-
-func test_large_view_replaces_compact_view() -> void:
+func test_one_saved_window_size() -> void:
 	var path := OS.get_temp_dir().path_join("agent-town-claude-code-test-%d" % randi()).path_join("settings.cfg")
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var old := ConfigFile.new()
-	old.set_value("app", "compact_view", false)
+	old.set_value("app", "large_view", true)
+	old.set_value("window", "position", Vector2i(100, 50))
+	old.set_value("window", "width", 968)
+	old.set_value("window", "height", 900)
 	old.save(path)
-	check_eq(TownSettings.new(path).large_view, false, "an old compact_view = false no longer means large")
+	var fresh := TownSettings.new(path)
+	check_eq(fresh.window_position, null, "a large-view size is not carried over: placed as a new install")
+	old.set_value("window_compact", "position", Vector2i(30, 40))
+	old.set_value("window_compact", "width", 500)
+	old.set_value("window_compact", "height", 300)
+	old.set_value("window_compact", "screen", 0)
+	old.save(path)
 	var a := TownSettings.new(path)
-	a.large_view = true
+	check_eq([a.window_position, a.window_width, a.window_height], [Vector2i(30, 40), 500, 300], "compact view's size is the one kept")
+	a.window_width = 640
 	a.save()
-	check_eq(TownSettings.new(path).large_view, true, "large view read back")
+	check_eq(TownSettings.new(path).window_width, 640, "saved back to the same place")
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(path.get_base_dir())

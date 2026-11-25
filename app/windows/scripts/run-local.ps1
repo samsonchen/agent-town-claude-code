@@ -15,9 +15,8 @@
     -CheckNow     a real update check against GitHub (a demo makes no automatic check)
     -Updates      open the Updates window
     -Settings     open the Settings window
-    -Large        large view (the office at full size; the default is compact, half size), without
-                  changing the saved setting
-    -Resize WxH   8 seconds in, shrink the window to W by H pixels, as a drag would (auto-scroll)
+    -Resize WxH   8 seconds in, resize the window to W by H pixels, as a drag would: smaller to see
+                  auto-scroll, larger to see the office grow and blocks go side by side
     -Breaks       break time on the bench after 10 idle seconds instead of 3 minutes
     -Pastime NAME standing bench characters take only this break (juggle, cube, toss, phone, chat, doze)
     -Sound        play the demo's sounds
@@ -39,7 +38,7 @@
 .EXAMPLE
   From PowerShell, in the repo folder:
     .\app\windows\scripts\run-local.ps1 -Demo 04 -Zh
-  From Git Bash or Claude Code's ! prompt: bash app/windows/scripts/run-local.sh -Large
+  From Git Bash or Claude Code's ! prompt: bash app/windows/scripts/run-local.sh -Demo 02 -Resize 1800x1000
 #>
 $ErrorActionPreference = 'Stop'
 
@@ -65,7 +64,6 @@ while ($i -lt $args.Count) {
     '^-(CheckNow)$' { $appArgs += '--check-now' }
     '^-(Updates)$' { $open += 'updates' }
     '^-(Settings)$' { $open += 'settings' }
-    '^-(Large)$' { $appArgs += @('--large', 'yes') }
     '^-(Resize)$' { if ($i + 1 -ge $args.Count) { Fail '-Resize needs WIDTHxHEIGHT' }; $i++; $appArgs += @('--resize', [string]$args[$i]) }
     '^-(Breaks)$' { $appArgs += @('--break-idle', '10') }
     '^-(Pastime)$' { if ($i + 1 -ge $args.Count) { Fail '-Pastime needs a name' }; $i++; $appArgs += @('--break-pastime', [string]$args[$i]) }

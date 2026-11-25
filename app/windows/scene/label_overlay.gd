@@ -4,12 +4,13 @@ extends Control
 ## projected position so text stays sharp. Port of the label views in
 ## app/macos/Sources/AgentTown/TownView.swift (Tag, MeterOverlay).
 
-# Sizes, scaled to 75% in compact view (ViewScale.text) when the overlay is made.
+# Sizes at 75% (ViewScale.text), times ViewScale.zoom in a window larger than the office.
 static var FONT_SIZE := 12 ## Cubic 11 is drawn at its own pixel size, or a multiple of it
 static var BAR_WIDTH := 96.0
 static var ROW_HEIGHT := 22.0
 static var METER_GAP := 8.0
-static var K := 1.0 ## ViewScale.text, for paddings
+static var K := 1.0 ## ViewScale.label(), for paddings
+static var Z := 1.0 ## ViewScale.zoom, for corners and borders
 
 const BACKGROUND := {
 	"name": Color(0, 0, 0, 0.55), "hat": Color(0.98, 0.80, 0.25), "ticket": Color.WHITE, "bubble": Color(0.86, 0.15, 0.15),
@@ -78,12 +79,7 @@ class ScrollingSign:
 func _init(p_scene: TownScene, p_camera: Camera3D) -> void:
 	scene = p_scene
 	camera = p_camera
-	K = ViewScale.text
-	FONT_SIZE = roundi(12 * K)
-	BAR_WIDTH = 96.0 * K
-	ROW_HEIGHT = 22.0 * K
-	METER_GAP = 8.0 * K
-	STATEMENT_WIDTH = 230.0 * K
+	_apply_zoom()
 	font = load("res://fonts/Cubic_11.ttf")
 	font.antialiasing = TextServer.FONT_ANTIALIASING_NONE
 	font.hinting = TextServer.HINTING_NONE
@@ -97,7 +93,21 @@ func _init(p_scene: TownScene, p_camera: Camera3D) -> void:
 	add_child(_top)
 
 
+## The sizes for the text scale now; the boxes are made again with their corners scaled.
+func _apply_zoom() -> void:
+	Z = ViewScale.zoom
+	K = ViewScale.label()
+	FONT_SIZE = maxi(1, roundi(12 * K))
+	BAR_WIDTH = 96.0 * K
+	ROW_HEIGHT = 22.0 * K
+	METER_GAP = 8.0 * K
+	STATEMENT_WIDTH = 230.0 * K
+	_boxes.clear()
+
+
 func _process(_delta: float) -> void:
+	if Z != ViewScale.zoom:
+		_apply_zoom()
 	queue_redraw()
 	_top.queue_redraw()
 
@@ -188,8 +198,8 @@ func _place_scroller(id: String, text: String, at: Vector2) -> void:
 		_scrollers[id] = sc
 		move_child(_top, -1) # statements stay above every sign
 	sc.text = text
-	var w := font.get_string_size("n".repeat(TownLabels.TITLE_WIDTH), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x + 10.0
-	var h := font.get_height(FONT_SIZE) + 4.0
+	var w := font.get_string_size("n".repeat(TownLabels.TITLE_WIDTH), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x + 10.0 * K
+	var h := font.get_height(FONT_SIZE) + 4.0 * K
 	sc.size = Vector2(w, h)
 	sc.position = (at - sc.size / 2.0).round()
 
@@ -223,7 +233,7 @@ func _draw_statement(at: Vector2, text: String) -> float:
 	if not _boxes.has("statement"):
 		var box := _rounded(BACKGROUND["statement"], 6)
 		box.border_color = CALL_COLOR
-		box.set_border_width_all(2)
+		box.set_border_width_all(maxi(2, roundi(2 * Z)))
 		_boxes["statement"] = box
 	_canvas.draw_style_box(_boxes["statement"], rect)
 	_canvas.draw_multiline_string(font, rect.position + Vector2(pad.x, pad.y + font.get_ascent(FONT_SIZE)), text, HORIZONTAL_ALIGNMENT_LEFT,
@@ -241,9 +251,9 @@ func _draw_meter(at: Vector2, item: Dictionary) -> void:
 	var top := at.y + METER_GAP + float(item["row"]) * ROW_HEIGHT
 	var rect := Rect2(Vector2(at.x - w / 2.0, top), Vector2(w, h)).abs()
 	rect.position = rect.position.round()
-	draw_style_box(_rounded(METER_BACKGROUND, 5), rect)
+	draw_style_box(_box("meter", METER_BACKGROUND, 5), rect)
 	var bar := Rect2(rect.position + Vector2(8 * K, (h - bh) / 2.0), Vector2(BAR_WIDTH, bh))
-	draw_style_box(_rounded(Color(1, 1, 1, 0.22), 3), bar)
+	draw_style_box(_box("bar", Color(1, 1, 1, 0.22), 3), bar)
 	var f: Variant = item["fraction"]
 	if f != null and float(f) > 0.0:
 		draw_style_box(_rounded(meter_color(float(f)), 3), Rect2(bar.position, Vector2(BAR_WIDTH * float(f), bh)))
@@ -260,14 +270,15 @@ static func meter_color(f: float) -> Color:
 	return Color(0.30, 0.72, 0.42)
 
 
-func _box(style: String) -> StyleBoxFlat:
+func _box(style: String, color: Variant = null, radius: int = 4) -> StyleBoxFlat:
 	if not _boxes.has(style):
-		_boxes[style] = _rounded(BACKGROUND.get(style, Color(0, 0, 0, 0.55)), 4)
+		_boxes[style] = _rounded(BACKGROUND.get(style, Color(0, 0, 0, 0.55)) if color == null else color, radius)
 	return _boxes[style]
 
 
+## A rounded box; the corner radius grows with the text in a window larger than the office.
 static func _rounded(color: Color, radius: int) -> StyleBoxFlat:
 	var s := StyleBoxFlat.new()
 	s.bg_color = color
-	s.set_corner_radius_all(radius)
+	s.set_corner_radius_all(roundi(radius * Z))
 	return s

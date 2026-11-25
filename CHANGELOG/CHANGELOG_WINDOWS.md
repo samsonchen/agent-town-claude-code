@@ -2,6 +2,12 @@
 
 What changed in each release of the Windows app. Each version is tagged `windows-v<version>` in this repository, and `git log windows-v<previous>..windows-v<version>` lists its commits. The macOS app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.12 (2026-11-26)
+
+- A window larger than the office (maximized, for example) is now filled: the office and its text grow with the window, up to three times their normal size, instead of staying small in the middle. In a wide window, project blocks sit side by side; a narrow window still scrolls through one column.
+- Settings → Office → Large view is gone, since the office now grows with the window. If you used Large view, resize the window once to the size you like.
+- A left click on the tray icon while the office window is showing opens the menu, as on the Mac. While the window is hidden, a left click still brings it back.
+
 ## 1.0.11 (2026-11-17)
 
 - Name tags, statements (what the CEO hears when walking up to someone) and signs are drawn above the context bars, not under them.

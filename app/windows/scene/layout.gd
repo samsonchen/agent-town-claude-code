@@ -192,16 +192,28 @@ static func exec_extra(rows: int) -> float:
 	return 0.0 if rows == 0 else float(rows) * meter_row_depth() + 0.15
 
 
-## The top-left corner of block `index` (0 is the executive block; project blocks stack under it).
-## `extra` is room under the executive block for the context bars of hidden blocks.
-static func block_origin(index: int, extra: float = 0.0) -> Vector2:
+## Columns the project blocks take: `columns`, but no more than there are projects.
+static func columns_used(count: int, columns: int) -> int:
+	return maxi(1, mini(columns, count - 1))
+
+
+## The top-left corner of block `index`. Index 0 is the executive block, centered along the top;
+## project blocks fill `columns` columns under it, left to right, then the next row, in the order
+## they opened. `extra` is room under the executive block for the context bars of hidden blocks.
+static func block_origin(index: int, count: int = 1, columns: int = 1, extra: float = 0.0) -> Vector2:
+	var cols := columns_used(count, columns)
 	if index <= 0:
-		return Vector2(MARGIN, MARGIN)
-	return Vector2(MARGIN, MARGIN + EXEC_DEPTH + extra + GAP + float(index - 1) * (BLOCK_DEPTH + GAP))
+		return Vector2((office_size(count, cols).x - BLOCK_WIDTH) / 2.0, MARGIN)
+	var col := (index - 1) % cols
+	var row := (index - 1) / cols
+	return Vector2(MARGIN + float(col) * (BLOCK_WIDTH + GAP), MARGIN + EXEC_DEPTH + extra + GAP + float(row) * (BLOCK_DEPTH + GAP))
 
 
-## The whole office for `count` blocks (the executive block included), path margin included.
-static func office_size(count: int, extra: float = 0.0) -> Vector2:
+## The whole office for `count` blocks (the executive block included) in `columns` columns, path
+## margin included.
+static func office_size(count: int, columns: int = 1, extra: float = 0.0) -> Vector2:
 	var projects := maxi(0, count - 1)
-	var column := 0.0 if projects == 0 else float(projects) * (GAP + BLOCK_DEPTH)
-	return Vector2(2.0 * MARGIN + BLOCK_WIDTH, 2.0 * MARGIN + EXEC_DEPTH + extra + column)
+	var cols := columns_used(count, columns)
+	var rows := (projects + cols - 1) / cols
+	var width := float(cols) * BLOCK_WIDTH + float(cols - 1) * GAP
+	return Vector2(2.0 * MARGIN + width, 2.0 * MARGIN + EXEC_DEPTH + extra + float(rows) * (GAP + BLOCK_DEPTH))

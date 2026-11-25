@@ -18,7 +18,6 @@ var show_tips := true ## the closable tips in the window
 var hide_without_sessions := false ## the office window hides while no Claude Code session is open
 var hide_idle_blocks := false ## project blocks show only while they have work
 var idle_hide_seconds := 5 ## how long a block's work must have settled before it hides
-var large_view := false ## the office at full size; off, it is in compact view (half size). Applies after a restart
 var check_updates := true ## check GitHub for a newer app and town-link once a day (spec: Updates)
 var last_update_check := 0 ## unix time of the last answered check; 0 before any
 var show_window := true
@@ -27,7 +26,9 @@ var window_position: Variant = null ## Vector2i, or null before the first save
 var window_width := 0
 var window_screen := -1
 var window_height := 0 ## 0 before the first save; the height follows the office unless the user made it shorter
-var _window_section := "window" ## "window_compact" in compact view: each view keeps its own size
+## The window's saved place. The section is compact view's, from when large view kept its own size
+## under "window" (Large view was removed in 1.0.12; a large-view size is not carried over).
+const WINDOW_SECTION := "window_compact"
 # Sounds (spec: sound settings). A choice is "" for the default, "media:<name>" for a sound in
 # C:\Windows\Media, or "file:<path>" for a file of the user's own.
 var volume := 1.0 ## 0 to 1, agent-town's own sounds only
@@ -51,34 +52,17 @@ func _init(p_path: String = "") -> void:
 	hide_without_sessions = bool(_cfg.get_value("app", "hide_without_sessions", false))
 	hide_idle_blocks = bool(_cfg.get_value("app", "hide_idle_blocks", hide_idle_blocks))
 	idle_hide_seconds = clamp_idle_hide(_cfg.get_value("app", "idle_hide_seconds", 5))
-	# Compact view is the default since 1.0.8; the old "compact_view" key is no longer read.
-	large_view = bool(_cfg.get_value("app", "large_view", false))
 	check_updates = bool(_cfg.get_value("updates", "check_automatically", true))
 	last_update_check = int(_cfg.get_value("updates", "last_check", 0))
 	show_window = bool(_cfg.get_value("app", "show_window", show_window))
 	opacity = clamp_opacity(_cfg.get_value("app", "opacity", opacity))
-	_read_window("window")
+	_read_window(WINDOW_SECTION)
 	volume = clamp_volume(_cfg.get_value("sounds", "volume", volume))
 	completion_threshold = clamp_threshold(_cfg.get_value("sounds", "completion_threshold", 0))
 	for key in SOUNDS:
 		sound_on[key] = bool(_cfg.get_value("sounds", key + "_on", true))
 		var c: Variant = _cfg.get_value("sounds", key + "_choice", "")
 		sound_choice[key] = c if typeof(c) == TYPE_STRING and (c == "" or c.begins_with("media:") or c.begins_with("file:")) else ""
-
-
-## The saved place of the window in the view the app runs in. The first time in compact view, when a
-## large-view place was saved (an install from before 1.0.8): its top-left corner, at half its
-## height, and wide enough for the office at compact view's full scale (`full_width` pixels). With
-## none saved, main.gd opens the window at the smallest size in the screen's top-right corner (1.0.9).
-func use_view(compact: bool, full_width: int) -> void:
-	_window_section = "window_compact" if compact else "window"
-	if _cfg.has_section_key(_window_section, "position"):
-		_read_window(_window_section)
-	elif compact and window_position != null:
-		window_width = mini(window_width, maxi(window_width / 2, full_width)) if window_width > 0 else full_width
-		window_height = window_height / 2
-	else:
-		window_position = null
 
 
 func _read_window(section: String) -> void:
@@ -130,7 +114,6 @@ func save() -> void:
 	_cfg.set_value("app", "hide_without_sessions", hide_without_sessions)
 	_cfg.set_value("app", "hide_idle_blocks", hide_idle_blocks)
 	_cfg.set_value("app", "idle_hide_seconds", idle_hide_seconds)
-	_cfg.set_value("app", "large_view", large_view)
 	_cfg.set_value("updates", "check_automatically", check_updates)
 	_cfg.set_value("updates", "last_check", last_update_check)
 	_cfg.set_value("app", "show_window", show_window)
@@ -141,9 +124,9 @@ func save() -> void:
 		_cfg.set_value("sounds", key + "_on", sound_on[key])
 		_cfg.set_value("sounds", key + "_choice", sound_choice[key])
 	if window_position != null:
-		_cfg.set_value(_window_section, "position", window_position)
-		_cfg.set_value(_window_section, "width", window_width)
-		_cfg.set_value(_window_section, "height", window_height)
-		_cfg.set_value(_window_section, "screen", window_screen)
+		_cfg.set_value(WINDOW_SECTION, "position", window_position)
+		_cfg.set_value(WINDOW_SECTION, "width", window_width)
+		_cfg.set_value(WINDOW_SECTION, "height", window_height)
+		_cfg.set_value(WINDOW_SECTION, "screen", window_screen)
 	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	_cfg.save(path)

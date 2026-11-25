@@ -23,6 +23,7 @@ var notes: BoardAndNotes ## the Dispatcher's board and the compaction notes
 var breaks: BenchBreaks ## break time on the bench
 var ceo_driver: CeoDriver ## the CEO under the user's control
 var office_size := Layout.office_size(1)
+var columns := 1 ## columns of project blocks: one, or more side by side in a wide window
 var blocks: Dictionary = {} ## id -> BlockNode
 var block_order: Array[String] = []
 var actors: Dictionary = {} ## id -> TownActor
@@ -738,13 +739,21 @@ func _chief_base(b: BlockNode) -> String:
 	return all[start]
 
 
-## Places the blocks in one column and sizes the path around them.
+## Lays the project blocks out in `c` columns (main.gd picks the count that fits the window).
+func set_columns(c: int) -> void:
+	if c == columns:
+		return
+	columns = c
+	relayout()
+
+
+## Places the blocks in their grid and sizes the path around them.
 func relayout() -> void:
 	hidden_meter_rows = hidden_meter_sessions().size()
 	var extra := Layout.exec_extra(hidden_meter_rows)
 	for i in block_order.size():
 		var b: BlockNode = blocks[block_order[i]]
-		var o := Layout.block_origin(i, extra)
+		var o := Layout.block_origin(i, block_order.size(), columns, extra)
 		var to := Vector3(o.x, 0, o.y)
 		if b.placed:
 			create_tween().tween_property(b.node, "position", to, 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -752,7 +761,7 @@ func relayout() -> void:
 			b.node.position = to
 			add_child(b.node)
 			b.placed = true
-	office_size = Layout.office_size(block_order.size(), extra)
+	office_size = Layout.office_size(block_order.size(), columns, extra)
 	_build_ground()
 	office_resized.emit(office_size)
 
@@ -822,15 +831,20 @@ static func tiles(width: float, depth: float, tile: float, colors: Array, grout:
 
 ## The cream brick path the blocks sit on, larger than any window shows.
 func _build_ground() -> void:
-	var size := office_size + Vector2(40, 40)
-	if size.x <= _ground_size.x and size.y <= _ground_size.y:
-		return
-	_ground_size = size
-	for c in _ground.get_children():
-		c.queue_free()
-	var plane := tiles(size.x, size.y, 0.5, ["#F4EADB", "#F4EADB"], "#EADDC9", true)
-	plane.position = Vector3(office_size.x / 2.0, -0.001, office_size.y / 2.0)
-	_ground.add_child(plane)
+	var size := office_size + Vector2(80, 80)
+	if size.x > _ground_size.x or size.y > _ground_size.y:
+		_ground_size = Vector2(maxf(size.x, _ground_size.x), maxf(size.y, _ground_size.y))
+		for c in _ground.get_children():
+			c.queue_free()
+		# One brick's texture, repeated: the path can be wide when blocks sit side by side.
+		var plane := tiles(0.5, 0.5, 0.5, ["#F4EADB", "#F4EADB"], "#EADDC9", true)
+		(plane.mesh as PlaneMesh).size = _ground_size
+		var mat := plane.material_override as StandardMaterial3D
+		mat.uv1_scale = Vector3(_ground_size.x / 0.5, _ground_size.y / 0.5, 1.0)
+		mat.texture_repeat = true
+		_ground.add_child(plane)
+	# Kept centered on the office, which moves its center when the column count changes.
+	_ground.position = Vector3(office_size.x / 2.0, -0.001, office_size.y / 2.0)
 
 
 ## The block's floor: a tiled carpet with a darker edge along the front.

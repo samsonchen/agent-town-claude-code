@@ -8,7 +8,7 @@ extends Node
 ##   godot --path app/windows -- --demo ../../protocol/fixtures/01-basic-ticket.json [--speed N]
 ##         [--snapshot out.png --at SECONDS[,SECONDS…]] [--language en|zh-Hant] [--open settings|about]
 ##         [--keys "down:1.5,right:1,h"] [--clicks "95:270@2,300:500@6"] [--ceo-goto "2,5.7;6,9@8"] [--hide-idle SECONDS]
-##         [--large yes] [--resize WxH] [--fake-update yes] [--check-now yes] [--open updates]
+##         [--resize WxH] [--fake-update yes] [--check-now yes] [--open updates]
 ##         [--hide-without-sessions yes] [--break-idle SECONDS] [--break-pastime NAME]
 ## [--sound no] keeps this run quiet; [--settings-file PATH] uses its own settings; --open takes
 ## several windows, comma-separated (settings,updates).
@@ -17,14 +17,20 @@ extends Node
 ## --break-idle N starts break time on the bench after N idle seconds instead of 180; --break-pastime
 ## NAME (juggle, cube, toss, phone, chat, doze) gives standing characters only that one.
 ## --hide-without-sessions yes turns Hide the window when no Claude Code session is open on for this
-## run, without saving. The office starts in compact view; --large yes shows large view for this run; --resize shrinks the window 8 s in, as a drag would.
+## run, without saving. --resize sets the window's size 8 s in, as a drag would (smaller to see
+## auto-scroll, larger to see the office grow and blocks go side by side).
 ## A run with --snapshot never starts the server, so it cannot take the endpoint from the running app.
 ## Gaps between events keep their timing, each capped at 4 s and divided by `--speed`.
 
-## The office is shown at 110 pixels per meter when it fits, never under 70, in large view; half that in compact view (the default).
-static var PIXELS_PER_METER := 110.0
-static var MIN_PIXELS_PER_METER := 70.0
-static var MIN_HEIGHT := 480
+## The office's normal size, 55 pixels per meter (half the first versions' 110). It is drawn as large
+## as fits the window, never smaller than MIN_PIXELS_PER_METER (a smaller window scrolls) nor larger
+## than MAX_ZOOM times this (a maximized window is filled; spec: A window larger than the office).
+const PIXELS_PER_METER := 110.0 * ViewScale.world
+const MIN_PIXELS_PER_METER := 70.0 * ViewScale.world
+const MAX_ZOOM := 3.0
+const MAX_PIXELS_PER_METER := PIXELS_PER_METER * MAX_ZOOM
+const MIN_HEIGHT := 240
+const COLUMNS_DELAY := 300 ## msec the window's size must hold before the column count is chosen again
 ## The smallest window: a corner of a laptop screen. A window smaller than the office scrolls.
 const MIN_SIZE := Vector2i(320, 240)
 const TIP_SIDE_MARGIN := 10.0 ## the least room between the tip and the window's sides
@@ -63,6 +69,7 @@ var _moving_until: Dictionary = {} ## id -> msec it still counts as walking
 var _auto_paused_until := 0
 var _auto_target: Variant = null ## Vector2 pan, or null
 var _auto_clock := 0.0
+var _columns_at := -1 ## msec when the column count is chosen next; -1 when nothing changed
 
 
 func _ready() -> void:
@@ -71,12 +78,6 @@ func _ready() -> void:
 	settings = TownSettings.new(_args.get("settings-file", ""))
 	# --language en|zh-Hant overrides the setting for this run (for checking screens).
 	labels = TownLabels.new(_args.get("language", settings.language))
-	# Compact view unless Large view is on; read once here, so a change in Settings applies after a restart.
-	ViewScale.set_compact(not (settings.large_view or _args.get("large", "") == "yes"))
-	PIXELS_PER_METER = 110.0 * ViewScale.world
-	MIN_PIXELS_PER_METER = 70.0 * ViewScale.world
-	MIN_HEIGHT = roundi(480 * ViewScale.world)
-	settings.use_view(ViewScale.compact, ceili((2.0 * Layout.MARGIN + Layout.BLOCK_WIDTH) * PIXELS_PER_METER))
 	var w := get_window()
 	w.title = "agent-town"
 	w.min_size = MIN_SIZE
@@ -111,8 +112,10 @@ func _ready() -> void:
 	scene.sound.connect(audio.play)
 	scene.office_resized.connect(func(_s: Vector2) -> void:
 		_fit_window(_last_office)
-		_last_office = scene.office_size)
+		_last_office = scene.office_size
+		_check_columns_later())
 	w.size_changed.connect(_update_camera)
+	w.size_changed.connect(_check_columns_later)
 	w.focus_exited.connect(func() -> void: scene.ceo_driver.release_keys())
 	scene.ceo_driver.moved.connect(_follow)
 	scene.ceo_driver.away_changed.connect(func(_away: bool) -> void: _update_tip())
@@ -348,7 +351,15 @@ func _build_tray() -> void:
 	add_child(_tray)
 	_tray.menu = _tray.get_path_to(_menu)
 	_tray.pressed.connect(func(button: int, _at: Vector2i) -> void:
-		if button == MOUSE_BUTTON_LEFT:
+		if button != MOUSE_BUTTON_LEFT:
+			return
+		# As the Mac's menu bar icon: a hidden window comes back; a window already showing opens the
+		# menu at the pointer (spec: Menu bar). The right button opens the menu itself.
+		if _window_showing():
+			_sync_menu()
+			_menu.popup(Rect2i(DisplayServer.mouse_get_position(), Vector2i.ZERO))
+		else:
+			presence.show_now()
 			_set_shown(true))
 	_sync_menu()
 
@@ -397,6 +408,11 @@ static func with_dot(icon: Image) -> Image:
 			elif d <= r + ring:
 				img.set_pixel(x, y, Color(0, 0, 0, 0))
 	return img
+
+
+## The office window is on screen: wanted, not hidden for want of a session, and not minimized.
+func _window_showing() -> bool:
+	return settings.show_window and not presence.auto_hidden and get_window().mode != Window.MODE_MINIMIZED
 
 
 func _sync_menu() -> void:
@@ -528,12 +544,12 @@ func _apply_opacity(value: float) -> void:
 
 
 ## The window opens where it was, on the same display if it is still connected (spec). With no saved
-## place at all (a new installation) in compact view, it opens at the smallest width in the top-right
+## place at all (a new installation), it opens at the smallest width in the top-right
 ## corner of the primary screen's usable area, 12 px in from the edges (macOS app 1.0.17). Its height
 ## then fits the office and follows it, as the user did not choose the size (_fit_window).
 func _restore_window() -> void:
 	var w := get_window()
-	if settings.window_position == null and settings.window_height <= 0 and ViewScale.compact and not _args.has("snapshot"):
+	if settings.window_position == null and settings.window_height <= 0 and not _args.has("snapshot"):
 		var usable := DisplayServer.screen_get_usable_rect(DisplayServer.get_primary_screen())
 		w.size = MIN_SIZE
 		# Godot places the client area: the top inset is to the title bar's top. On the sides, Windows 11's
@@ -569,9 +585,25 @@ func _office_pixels(ppm: float) -> Vector2:
 
 
 func pixels_per_meter(size: Vector2) -> float:
-	var fit := _office_pixels(1.0)
-	var k := minf(size.x / maxf(1.0, fit.x), size.y / maxf(1.0, fit.y))
-	return minf(PIXELS_PER_METER, maxf(MIN_PIXELS_PER_METER, k))
+	return OfficeColumns.scale(_office_pixels(1.0), size, MIN_PIXELS_PER_METER, MAX_PIXELS_PER_METER)
+
+
+func _check_columns_later() -> void:
+	_columns_at = Time.get_ticks_msec() + COLUMNS_DELAY
+
+
+## Lays the project blocks out in the number of columns that shows the office largest in the
+## window: one in a narrow window, side by side in a wide one (spec: A window larger than the
+## office). Runs once the window's size has held a moment (not on every step of a drag), and when
+## blocks come or go. Port of `TownView.chooseColumns` in app/macos/Sources/AgentTown/TownView.swift.
+func _choose_columns() -> void:
+	var n := scene.block_order.size()
+	var extra := Layout.exec_extra(scene.hidden_meter_rows)
+	var c := OfficeColumns.best(n - 1, scene.columns, Vector2(get_window().size), MIN_PIXELS_PER_METER, MAX_PIXELS_PER_METER,
+		func(cols: int) -> Vector2:
+			var o := Layout.office_size(n, cols, extra)
+			return Vector2(o.x, o.y * sin(TownScene.PITCH)))
+	scene.set_columns(c)
 
 
 ## How far the camera may pan from the office center before showing only path.
@@ -589,21 +621,25 @@ func _update_camera() -> void:
 	var target := Vector3(scene.office_size.x / 2.0 + pan.x, 0, scene.office_size.y / 2.0 + pan.y)
 	var dir := Vector3(0, sin(TownScene.PITCH), cos(TownScene.PITCH))
 	camera.size = size.y / ppm # visible height in meters
+	# Text grows with the office in a window larger than it (LabelOverlay reads it as it draws).
+	ViewScale.zoom = clampf(ppm / PIXELS_PER_METER, 1.0, MAX_ZOOM)
 	camera.near = 1.0
 	camera.far = 100.0
 	camera.look_at_from_position(target + dir * 40.0, target, Vector3.UP)
 
 
-## Makes the window as tall as the office at the current width's scale, keeping its top edge and
+## Makes the window as tall as the office at the scale its width gives (up to the largest, so a
+## window the user made wider stays as large after a block comes or goes), keeping its top edge and
 ## staying on the screen (spec: the window grows with the office). A taller office scrolls.
 ## A window the user made shorter than the office (`before`, the office it was showing) keeps its
-## height and auto-scrolls instead, so a small window on a laptop stays small.
+## height and auto-scrolls instead, so a small window on a laptop stays small. A maximized window,
+## or one wide enough for blocks side by side, keeps its size.
 func _fit_window(before: Variant = null) -> void:
 	var w := get_window()
-	if w.mode != Window.MODE_WINDOWED:
+	if w.mode != Window.MODE_WINDOWED or scene.columns != 1:
 		_update_camera()
 		return
-	var ppm := minf(PIXELS_PER_METER, maxf(MIN_PIXELS_PER_METER, float(w.size.x) / maxf(1.0, scene.office_size.x)))
+	var ppm := minf(MAX_PIXELS_PER_METER, maxf(MIN_PIXELS_PER_METER, float(w.size.x) / maxf(1.0, scene.office_size.x)))
 	var usable := DisplayServer.screen_get_usable_rect(w.current_screen)
 	if before != null and (before as Vector2) != Vector2.ZERO:
 		var shown := (before as Vector2).y * sin(TownScene.PITCH) * ppm
@@ -623,6 +659,9 @@ func _fit_window(before: Variant = null) -> void:
 
 func _process(delta: float) -> void:
 	_auto_clock += delta
+	if _columns_at >= 0 and Time.get_ticks_msec() >= _columns_at:
+		_columns_at = -1
+		_choose_columns()
 	if _auto_clock >= 0.033: # about 30 times a second
 		_auto_clock = 0.0
 		_auto_scroll_step()
@@ -682,8 +721,8 @@ func _auto_scroll_step() -> void:
 	_update_camera()
 
 
-## --resize WxH: 8 seconds in, once the demo's blocks are open, shrink the window as a user's drag
-## would, to see auto-scroll.
+## --resize WxH: 8 seconds in, once the demo's blocks are open, resize the window as a user's drag
+## would: smaller to see auto-scroll, larger to see the office grow and blocks go side by side.
 func _resize_later(spec: String) -> void:
 	var wh := spec.split("x")
 	if wh.size() != 2:
