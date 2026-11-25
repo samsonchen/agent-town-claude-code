@@ -13,6 +13,11 @@ enum ViewScale {
     static let world: CGFloat = compact ? 0.5 : 1
     /// Tags, signs, statements and context bars.
     static let text: CGFloat = compact ? 0.75 : 1
+    /// How much larger than its normal size the office is drawn now, when the window is larger
+    /// than the office (1 to `TownView.maxZoom`). Set by the office view as it draws; text grows with it.
+    nonisolated(unsafe) static var zoom: CGFloat = 1
+    /// Text size now: `text` times `zoom`.
+    static var label: CGFloat { text * zoom }
 }
 
 /// World layout, in meters, on one flat plane (y up). x runs right and z runs down
@@ -168,19 +173,27 @@ enum Layout {
         return out
     }
 
-    /// The top-left corner of block `index` (index 0 is the executive block; project blocks are
-    /// stacked under it in one column).
-    /// `execExtra` is room under the executive block for the context bars of hidden blocks.
-    static func blockOrigin(_ index: Int, count: Int, execExtra: Float = 0) -> SIMD2<Float> {
-        guard index > 0 else { return [margin, margin] }
-        return [margin, margin + execDepth + execExtra + gap + Float(index - 1) * (blockDepth + gap)]
+    /// Columns the project blocks take: `columns`, but no more than there are projects.
+    static func columnsUsed(count: Int, columns: Int) -> Int { max(1, min(columns, count - 1)) }
+
+    /// The top-left corner of block `index`. Index 0 is the executive block, centered along the top;
+    /// project blocks fill `columns` columns under it, left to right, then the next row, in the order
+    /// they opened. `execExtra` is room under the executive block for the context bars of hidden blocks.
+    static func blockOrigin(_ index: Int, count: Int, columns: Int = 1, execExtra: Float = 0) -> SIMD2<Float> {
+        let cols = columnsUsed(count: count, columns: columns)
+        guard index > 0 else { return [(officeSize(count: count, columns: cols).x - blockWidth) / 2, margin] }
+        let col = (index - 1) % cols, row = (index - 1) / cols
+        return [margin + Float(col) * (blockWidth + gap), margin + execDepth + execExtra + gap + Float(row) * (blockDepth + gap)]
     }
 
-    /// The whole office for `count` blocks (the executive block included), path margin included.
-    static func officeSize(count: Int, execExtra: Float = 0) -> SIMD2<Float> {
+    /// The whole office for `count` blocks (the executive block included) in `columns` columns,
+    /// path margin included.
+    static func officeSize(count: Int, columns: Int = 1, execExtra: Float = 0) -> SIMD2<Float> {
         let projects = max(0, count - 1)
-        let column = projects == 0 ? 0 : Float(projects) * (gap + blockDepth)
-        return [2 * margin + blockWidth, 2 * margin + execDepth + execExtra + column]
+        let cols = columnsUsed(count: count, columns: columns)
+        let rows = (projects + cols - 1) / cols
+        let width = Float(cols) * blockWidth + Float(cols - 1) * gap
+        return [2 * margin + width, 2 * margin + execDepth + execExtra + Float(rows) * (gap + blockDepth)]
     }
 }
 

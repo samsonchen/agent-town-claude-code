@@ -19,6 +19,8 @@ final class TownScene: ObservableObject {
     var onSound: ((String) -> Void)?
     /// The office size in meters (x by z), for the camera.
     @Published private(set) var officeSize = Layout.officeSize(count: 1)
+    /// Columns of project blocks: one, or more side by side in a wide window.
+    private(set) var columns = 1
 
     let assets = Assets.shared
     /// The latest building state, for looking up roles and parents while scenes play.
@@ -462,6 +464,13 @@ final class TownScene: ObservableObject {
         return all[start]
     }
 
+    /// Lays the project blocks out in `c` columns (the office view picks the count that fits the window).
+    func setColumns(_ c: Int) {
+        guard c != columns else { return }
+        columns = c
+        relayout()
+    }
+
     /// Places the blocks in their grid and sizes the path around them.
     func relayout() {
         let n = blockOrder.count
@@ -469,7 +478,7 @@ final class TownScene: ObservableObject {
         let extra = Layout.execExtra(rows: hiddenMeterRows)
         for (i, id) in blockOrder.enumerated() {
             guard let node = blocks[id] else { continue }
-            let o = Layout.blockOrigin(i, count: n, execExtra: extra)
+            let o = Layout.blockOrigin(i, count: n, columns: columns, execExtra: extra)
             var t = node.entity.transform
             t.translation = [o.x, 0, o.y]
             if node.placed {
@@ -480,7 +489,7 @@ final class TownScene: ObservableObject {
                 node.placed = true
             }
         }
-        let size = Layout.officeSize(count: n, execExtra: extra)
+        let size = Layout.officeSize(count: n, columns: columns, execExtra: extra)
         if size != officeSize {
             officeSize = size
             buildGround()
@@ -557,7 +566,7 @@ final class TownScene: ObservableObject {
 
     /// The cream brick path the blocks sit on, larger than any window shows.
     private func buildGround() {
-        let size = officeSize + [40, 40]
+        let size = officeSize + [80, 80]
         guard size.x > groundSize.x || size.y > groundSize.y else { return }
         groundSize = size
         ground.children.removeAll()

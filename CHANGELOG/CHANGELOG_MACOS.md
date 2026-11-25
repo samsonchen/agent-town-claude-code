@@ -2,6 +2,11 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.21 (2026-11-26)
+
+- A large window is filled: maximized or in full screen, the office grows to fit the window (up to three times its normal size), and its names, signs and context bars grow with it. Before, it stayed at its normal size in the middle.
+- In a wide window, project blocks sit side by side in two or more columns, with the executive office centered above them. A narrow window keeps one column.
+
 ## 1.0.20 (2026-11-17)
 
 - A statement card is drawn above the block signs ("Executive office", project names) and every other tag, so a sign no longer covers it.

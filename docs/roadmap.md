@@ -78,7 +78,8 @@ Answers: [verification.md](verification.md). Most items are answered by the API 
 ## Phase 4: the whole office (in progress)
 
 - [x] Executive block: the Dispatcher's board and scheduled tickets (scenes 13, 14); the Inspector at reception (scene 15)
-- [ ] Many project blocks: zoom (blocks are one column now; a taller office scrolls)
+- [x] A window larger than the office: the office and its text grow to fill it, and project blocks sit side by side in a wide window (macOS app 1.0.21)
+- [ ] Many project blocks in a small window: zoom out (a taller office still scrolls)
 - [ ] Several sessions in one block: check the walk-in desk scene and the limit of five, the back row's desk spots (two and three sessions work)
 - [ ] Window and bench size settings
 - [x] Compact view (half size, text at 75%), windows down to 320 × 240, and auto-scroll to walking characters (macOS app 1.0.8)

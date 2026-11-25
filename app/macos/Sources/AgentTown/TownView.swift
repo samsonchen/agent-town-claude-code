@@ -22,9 +22,13 @@ struct TownView: View {
     /// The smallest window: a corner of a laptop screen. A window smaller than the office scrolls.
     static let minSize = CGSize(width: 320, height: 240)
 
-    /// The office is shown at this size when it fits, and never smaller than `minPixelsPerMeter`.
+    /// The office's normal size. It is drawn as large as fits the window, never smaller than
+    /// `minPixelsPerMeter` (a smaller window scrolls) nor larger than `maxZoom` times this.
     static let pixelsPerMeter: CGFloat = 110 * ViewScale.world
     static let minPixelsPerMeter: CGFloat = 70 * ViewScale.world
+    /// In a window larger than the office (maximized, full screen), the office and its text grow up to this.
+    static let maxZoom: CGFloat = 3
+    static var maxPixelsPerMeter: CGFloat { pixelsPerMeter * maxZoom }
 
     static func makeCamera() -> Entity {
         let cam = Entity()
@@ -39,8 +43,21 @@ struct TownView: View {
 
     func pixelsPerMeter(_ size: CGSize) -> CGFloat {
         let fit = officePixels(1)
-        let k = min(size.width / max(1, fit.width), size.height / max(1, fit.height))
-        return min(Self.pixelsPerMeter, max(Self.minPixelsPerMeter, k))
+        return CGFloat(OfficeColumns.scale(office: [Float(fit.width), Float(fit.height)], window: [Float(size.width), Float(size.height)],
+                                           minScale: Float(Self.minPixelsPerMeter), maxScale: Float(Self.maxPixelsPerMeter)))
+    }
+
+    /// Lays the project blocks out in the number of columns that shows the office largest in a
+    /// window of `size`: one in a narrow window, side by side in a wide one (spec: The office window).
+    private func chooseColumns(size: CGSize) {
+        let n = scene.blockOrder.count
+        let extra = Layout.execExtra(rows: scene.hiddenMeterRows)
+        let c = OfficeColumns.best(projects: n - 1, current: scene.columns, window: [Float(size.width), Float(size.height)],
+                                   minScale: Float(Self.minPixelsPerMeter), maxScale: Float(Self.maxPixelsPerMeter)) { c in
+            let o = Layout.officeSize(count: n, columns: c, execExtra: extra)
+            return [o.x, o.y * Projector.depthFactor]
+        }
+        scene.setColumns(c)
     }
 
     /// How far the camera may pan from the office center before showing only path.
@@ -99,9 +116,11 @@ struct TownView: View {
     /// user dragged to holds until then. A taller office than the screen pans with the scroll wheel.
     ///
     /// A window the user made shorter than the office (`before`, the office it was showing) keeps
-    /// its height and auto-scrolls instead, so a small window on a laptop stays small.
+    /// its height and auto-scrolls instead, so a small window on a laptop stays small. A maximized
+    /// or full-screen window, or one wide enough for blocks side by side, keeps its size.
     private func fitWindow(in w: NSWindow? = nil, before: SIMD2<Float>? = nil) {
-        guard let window = w ?? window, let screen = window.screen ?? NSScreen.main, !window.styleMask.contains(.fullScreen) else { return }
+        guard let window = w ?? window, let screen = window.screen ?? NSScreen.main, !window.styleMask.contains(.fullScreen),
+              !window.isZoomed, scene.columns == 1 else { return }
         let content = window.contentRect(forFrameRect: window.frame)
         let ppm = min(Self.pixelsPerMeter, max(Self.minPixelsPerMeter, content.width / CGFloat(max(1, scene.officeSize.x))))
         let chrome = window.frame.height - content.height
@@ -129,6 +148,8 @@ struct TownView: View {
     var body: some View {
         GeometryReader { geo in
             let proj = projector(geo.size)
+            // Text grows with the office in a window larger than it.
+            let _ = { ViewScale.zoom = max(1, min(Self.maxZoom, pixelsPerMeter(geo.size) / Self.pixelsPerMeter)) }()
             ZStack(alignment: .topLeading) {
                 RealityView { content in
                     content.add(scene.root)
@@ -143,9 +164,9 @@ struct TownView: View {
                 TimelineView(.animation) { _ in
                     ZStack(alignment: .topLeading) {
                         CallLines(lines: scene.callLines(), projector: proj)
-                        MeterOverlay(items: scene.meterItems(), projector: proj)
+                        MeterOverlay(items: scene.meterItems(), projector: proj, zoom: ViewScale.zoom)
                         // After the context bars, so a statement or tag is never hidden under one.
-                        LabelOverlay(items: scene.labelItems(), projector: proj)
+                        LabelOverlay(items: scene.labelItems(), projector: proj, zoom: ViewScale.zoom)
                     }
                 }
                 .allowsHitTesting(false)
@@ -166,6 +187,12 @@ struct TownView: View {
             .onChange(of: scene.ceoSpot) { _, spot in
                 follow(spot, size: geo.size)
                 autoScroll.pause() // the user is walking the CEO
+            }
+            .task(id: ColumnsCheck(size: geo.size, office: scene.officeSize)) {
+                // Once the window has held its size a moment (not on every step of a drag), and when
+                // blocks come or go.
+                try? await Task.sleep(for: .milliseconds(300))
+                if !Task.isCancelled { chooseColumns(size: geo.size) }
             }
             .task(id: geo.size) {
                 while !Task.isCancelled {
@@ -212,6 +239,12 @@ struct TownView: View {
     }
 }
 
+/// What the column count depends on: the window's size and the office's.
+private struct ColumnsCheck: Equatable {
+    let size: CGSize
+    let office: SIMD2<Float>
+}
+
 /// A dashed line between the two people on each call.
 struct CallLines: View {
     /// The line arcs up over whoever stands between the two callers.
@@ -239,6 +272,8 @@ struct CallLines: View {
 struct LabelOverlay: View {
     let items: [TownScene.LabelItem]
     let projector: Projector
+    /// `ViewScale.zoom`, passed in so tags are redrawn when it changes.
+    let zoom: CGFloat
 
     /// Space kept between the window's top and the highest tag.
     static let topMargin: CGFloat = 6
@@ -264,11 +299,11 @@ struct LabelOverlay: View {
                 let isSign = item.lines.first?.1 == .sign
                 Group {
                     if item.scroll {
-                        ScrollingSign(text: item.lines.first?.0 ?? "")
+                        ScrollingSign(text: item.lines.first?.0 ?? "", zoom: zoom)
                     } else {
                         VStack(spacing: 2) {
                             ForEach(Array(item.lines.enumerated()), id: \.offset) { _, line in
-                                Tag(text: line.0, style: line.1)
+                                Tag(text: line.0, style: line.1, zoom: zoom)
                             }
                         }
                     }
@@ -287,6 +322,7 @@ struct LabelOverlay: View {
 /// `Labels.titleWidth` columns wide.
 struct ScrollingSign: View {
     let text: String
+    let zoom: CGFloat
     /// Points per second.
     static let speed: Double = 28
 
@@ -309,10 +345,10 @@ struct ScrollingSign: View {
                                  startPoint: .leading, endPoint: .trailing))
         }
         .frame(width: window)
-        .padding(.horizontal, 5)
-        .padding(.vertical, 1.5)
+        .padding(.horizontal, 5 * zoom)
+        .padding(.vertical, 1.5 * zoom)
         .foregroundStyle(Tag.foreground(.sign))
-        .background(RoundedRectangle(cornerRadius: 4).fill(Tag.background(.sign)))
+        .background(RoundedRectangle(cornerRadius: 4 * zoom).fill(Tag.background(.sign)))
     }
 }
 
@@ -320,11 +356,13 @@ struct ScrollingSign: View {
 struct MeterOverlay: View {
     let items: [TownScene.MeterItem]
     let projector: Projector
+    /// `ViewScale.zoom`, passed in so the bars are redrawn when it changes.
+    let zoom: CGFloat
 
-    static let barWidth: CGFloat = 96 * ViewScale.text
-    static let rowHeight: CGFloat = 22 * ViewScale.text
-    static let gap: CGFloat = 8 * ViewScale.text
-    static let font = NSFont.monospacedDigitSystemFont(ofSize: 10.5 * ViewScale.text, weight: .medium)
+    static var barWidth: CGFloat { 96 * ViewScale.label }
+    static var rowHeight: CGFloat { 22 * ViewScale.label }
+    static var gap: CGFloat { 8 * ViewScale.label }
+    static var font: NSFont { NSFont.monospacedDigitSystemFont(ofSize: 10.5 * ViewScale.label, weight: .medium) }
 
     /// Green while there is room, amber past 60%, red past 80%.
     static func color(_ f: Double) -> NSColor {
@@ -338,18 +376,18 @@ struct MeterOverlay: View {
         ZStack(alignment: .topLeading) {
             ForEach(items, id: \.id) { item in
                 let p = projector.screen(item.anchor)
-                HStack(spacing: 7 * ViewScale.text) {
+                HStack(spacing: 7 * ViewScale.label) {
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color.white.opacity(0.22))
                         Capsule().fill(Color(nsColor: Self.color(item.fraction ?? 0)))
                             .frame(width: Self.barWidth * CGFloat(item.fraction ?? 0))
                     }
-                    .frame(width: Self.barWidth, height: 7 * ViewScale.text)
+                    .frame(width: Self.barWidth, height: 7 * ViewScale.label)
                     Text(item.text).font(Font(Self.font)).foregroundStyle(.white)
                 }
-                .padding(.horizontal, 8 * ViewScale.text)
-                .frame(height: Self.rowHeight - 4 * ViewScale.text)
-                .background(RoundedRectangle(cornerRadius: 5).fill(Color(nsColor: Self.background)))
+                .padding(.horizontal, 8 * ViewScale.label)
+                .frame(height: Self.rowHeight - 4 * ViewScale.label)
+                .background(RoundedRectangle(cornerRadius: 5 * zoom).fill(Color(nsColor: Self.background)))
                 .fixedSize()
                 .frame(width: 0, height: 0)
                 .position(x: p.x, y: p.y + Self.gap + Self.rowHeight / 2 + CGFloat(item.row) * Self.rowHeight)
@@ -363,9 +401,13 @@ struct Tag: View {
 
     let text: String
     let style: TownScene.LabelItem.Style
+    /// `ViewScale.zoom`: padding and corners grow with the text (passed in so the tag is redrawn).
+    var zoom: CGFloat = ViewScale.zoom
 
     /// A statement wraps at this width.
-    static let statementWidth: CGFloat = 230 * ViewScale.text
+    static var statementWidth: CGFloat { 230 * ViewScale.label }
+
+    private var z: CGFloat { zoom }
 
     var body: some View {
         if style == .statement {
@@ -374,23 +416,23 @@ struct Tag: View {
                 .multilineTextAlignment(.leading)
                 .frame(width: Self.width(text, style), alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 5)
+                .padding(.horizontal, 7 * z)
+                .padding(.vertical, 5 * z)
                 .foregroundStyle(Self.foreground(style))
-                .background(RoundedRectangle(cornerRadius: 6).fill(Self.background(style)))
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Self.callColor, lineWidth: 1.5))
+                .background(RoundedRectangle(cornerRadius: 6 * z).fill(Self.background(style)))
+                .overlay(RoundedRectangle(cornerRadius: 6 * z).stroke(Self.callColor, lineWidth: 1.5 * z))
         } else {
             Text(text)
                 .font(Font(Self.font(style)))
-                .padding(.horizontal, 5)
-                .padding(.vertical, 1.5)
+                .padding(.horizontal, 5 * z)
+                .padding(.vertical, 1.5 * z)
                 .foregroundStyle(Self.foreground(style))
-                .background(RoundedRectangle(cornerRadius: 4).fill(Self.background(style)))
+                .background(RoundedRectangle(cornerRadius: 4 * z).fill(Self.background(style)))
         }
     }
 
     static func font(_ s: TownScene.LabelItem.Style) -> NSFont {
-        let k = ViewScale.text
+        let k = ViewScale.label
         return switch s {
         case .sign: .systemFont(ofSize: 13 * k, weight: .semibold)
         case .name: .systemFont(ofSize: 10.5 * k, weight: .semibold)
@@ -405,9 +447,9 @@ struct Tag: View {
         if s == .statement {
             let r = NSAttributedString(string: text, attributes: [.font: f])
                 .boundingRect(with: CGSize(width: width(text, s), height: .greatestFiniteMagnitude), options: [.usesLineFragmentOrigin])
-            return ceil(r.height) + 10
+            return ceil(r.height) + 10 * ViewScale.zoom
         }
-        return ceil(f.ascender - f.descender + f.leading) + 3
+        return ceil(f.ascender - f.descender + f.leading) + 3 * ViewScale.zoom
     }
 
     /// The text's width on one line, up to the wrap width.
