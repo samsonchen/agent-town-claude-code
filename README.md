@@ -155,7 +155,7 @@ Claude Code must run natively on Windows (the terminal, the Desktop app's Code t
 
 The window shows one office building, seen from above. At the top is the executive office, where you, the CEO, sit beside the Inspector and the Dispatcher. Under it, each project you have open in Claude Code gets a block: its Chief of Staff (the session) takes your tickets, pages staff from the bench for each subagent, sends operators to the server room for background tasks, waits for your approval when Claude Code asks, and phones the report back. You hear a sound when work is dispatched, when it is done, and when your approval is needed.
 
-For a laptop screen, the office starts at half size (compact view; Settings has Large view for full size). Settings can also hide idle project blocks, and hide the window when no Claude Code session is open. The window can be made small: the view then scrolls by itself to where people are walking. Made large (maximized or full screen), the office grows to fill it, text included, and project blocks sit side by side.
+The office is drawn to fit the window: small in a corner of a laptop screen, large when the window is made larger (the Windows app still has a Large view setting until it gets the same change). Settings can also hide idle project blocks, and hide the window when no Claude Code session is open. The window can be made small: the view then scrolls by itself to where people are walking. Made large (maximized or full screen), the office grows to fill it, text included, and project blocks sit side by side.
 
 The whole tour, with the settings: [The office](docs/office.md).
 

@@ -243,6 +243,18 @@ Two bugs found on the Mac; check whether the Windows app has them.
 
 - [x] When the CEO stands next to a character near a block sign, the statement card was partly covered by the sign ("Executive office", a project name). Fix on the Mac: draw the label items with a statement last (`LabelOverlay` in `TownView.swift`, `hasStatement`). On Windows, `label_overlay.gd` draws tags in `label_items()` order in one loop: draw the items with a statement after all the others. Check with a demo of two projects and the CEO walked up to a Chief of Staff just under a sign. Windows app 1.0.11: `label_overlay.gd` draws the items with a statement on a top layer (`TopLayer`, a child kept last), since a scrolling sign is a child control and is drawn over the overlay's own drawing; ordering them last in `_draw` alone would leave them under scrolling signs. New dev flag `--ceo-goto "x,z;x,z@seconds"` (the Mac's `TOWN_CEO_GOTO`). Checked with fixture 05 snapshots, the CEO sent to Chiefs of Staff and staff with `--clicks`: statements still draw, wrapped, above everything. No spot in fixture 05 puts a statement over a sign or tag, so the overlap itself is to confirm by hand.
 
+### Windows app: remove Large view (asked 2026-11-26; macOS app 1.0.21)
+
+With the office growing to fit the window (the section below), the Mac dropped Settings → Office → Large view. Do this together with "a window larger than the office" (`docs/spec.md` → The office → **The office's normal size**; Mac code: `ViewScale` in `Layout.swift`, `WindowPlace` in `TownView.swift`, the Office section of `SettingsView` in `Preferences.swift`):
+
+- `ViewScale`: always the compact scale (world 0.5, text 0.75); remove the setting from `scene/view_scale.gd`, `shell/town_settings.gd` and `shell/settings_window.gd` (the switch, its restart note and its Restart now button).
+- One saved window size: compact view's. A large-view size is not carried over (the user agreed users may resize once).
+- `_fit_window`: fit the office at the scale the window's width gives, up to the largest (3 × `PIXELS_PER_METER`), not capped at `PIXELS_PER_METER`, so a window made wider stays as large when a block comes or goes (Mac: `TownView.fitWindow`).
+- `run-local`: drop `-Large` / `--large yes` and its help line; update `docs/windows/` where it names Large view.
+- Strings: once no app uses them, remove "Large view" and "Restart agent-town to change the view." from the Mac's `Localizable.strings` (en and zh-Hant) and sync the copies. The Mac no longer uses them; they stay until the Windows app drops them, so its copy keeps the translations.
+
+Checked on the Mac: `swift build`, `swift test`, and a demo at the default size and made wider.
+
 ### Windows app: the tray icon's left click (asked 2026-11-26; macOS app 1.0.21)
 
 On the Mac, a click on the menu bar icon now shows a hidden office window, and opens the menu while the window is showing; a right-click or Control-click always opens the menu (`docs/spec.md` → The menu bar menu; Mac code: `MenuBar.swift`, `clicked`). The Windows tray already shows the window on a left click (`main.gd`, `_build_tray`) and unchecks Show agent-town when the window's close button is used (`NOTIFICATION_WM_CLOSE_REQUEST`). To match the Mac: on a left click while the window is already showing, open the tray menu at the cursor (`_menu.popup` at `DisplayServer.mouse_get_position()`) instead of only bringing the window forward. Checked on the Mac with a demo build: a click with the window showing opened the menu; after the close button, the menu showed Show agent-town unchecked; a left click then brought the window back; the menu's Show agent-town hid and showed it, and Settings… opened Settings.

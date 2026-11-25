@@ -111,7 +111,8 @@ struct TownView: View {
         pan = from + d * 0.12 // eases in over about half a second
     }
 
-    /// Makes the window as tall as the office at the current width's scale, keeping its top edge
+    /// Makes the window as tall as the office at the scale its width gives (up to the largest, so a
+    /// window the user made wider stays as large after a block comes or goes), keeping its top edge
     /// where it is and staying on the screen. Runs when a block is added or removed, so a size the
     /// user dragged to holds until then. A taller office than the screen pans with the scroll wheel.
     ///
@@ -122,7 +123,7 @@ struct TownView: View {
         guard let window = w ?? window, let screen = window.screen ?? NSScreen.main, !window.styleMask.contains(.fullScreen),
               !window.isZoomed, scene.columns == 1 else { return }
         let content = window.contentRect(forFrameRect: window.frame)
-        let ppm = min(Self.pixelsPerMeter, max(Self.minPixelsPerMeter, content.width / CGFloat(max(1, scene.officeSize.x))))
+        let ppm = min(Self.maxPixelsPerMeter, max(Self.minPixelsPerMeter, content.width / CGFloat(max(1, scene.officeSize.x))))
         let chrome = window.frame.height - content.height
         let visible = screen.visibleFrame
         if let before {
@@ -601,27 +602,19 @@ extension View {
 @MainActor enum WindowPlace {
     private static var observers: [NSObjectProtocol] = []
 
-    /// Compact view keeps its own frame, so turning it on or off brings back that view's size.
-    static var key: String { ViewScale.compact ? Prefs.windowFrameCompact : Prefs.windowFrame }
+    static let key = Prefs.windowFrame
 
     /// Moves the window to its saved frame, if that is still on a connected display; true if it did
     /// (false for a new installation's first placement, which the user has not sized).
-    /// The first time in compact view, the normal frame's top-left corner, at half its height and wide
-    /// enough for the office at compact view's full scale. With no saved frame at all (a new
-    /// installation), compact view opens at the smallest width in the screen's top-right corner; its height still fits the office.
+    /// With no saved frame (a new installation), the window opens at the smallest width in the
+    /// screen's top-right corner; its height still fits the office.
     @discardableResult static func restore(_ w: NSWindow) -> Bool {
         let d = UserDefaults.standard
         var r: NSRect
         var fresh = false
         if let s = d.string(forKey: key) {
             r = NSRectFromString(s)
-        } else if ViewScale.compact, let s = d.string(forKey: Prefs.windowFrame) {
-            // Half the normal window, but wide enough for the office at compact view's full scale.
-            let n = NSRectFromString(s)
-            let full = CGFloat(2 * Layout.margin + Layout.blockWidth) * TownView.pixelsPerMeter
-            let width = min(n.width, max(n.width / 2, full))
-            r = NSRect(x: n.minX, y: n.maxY - n.height / 2, width: width, height: n.height / 2)
-        } else if ViewScale.compact, let screen = w.screen ?? NSScreen.main {
+        } else if let screen = w.screen ?? NSScreen.main {
             // A new installation: the smallest width, in the top-right corner of the screen.
             fresh = true
             let v = screen.visibleFrame

@@ -36,9 +36,6 @@ enum Prefs {
         let d = UserDefaults.standard // double(forKey:) also reads a number given as a launch argument
         return clampIdleHide(d.object(forKey: idleHideSeconds) == nil ? 5 : d.double(forKey: idleHideSeconds))
     }
-    /// Large view: the office at full size. Default off, so the office is drawn in compact view (half
-    /// size, for a laptop screen). Applies after a restart.
-    static let largeView = "largeView"
     /// Check GitHub for a newer app and town-link once a day. Default on (spec: Updates).
     static let checkForUpdatesKey = "checkForUpdates"
     static var checkForUpdates: Bool { isOn(checkForUpdatesKey) }
@@ -46,10 +43,9 @@ enum Prefs {
     static let lastUpdateCheck = "lastUpdateCheck"
     /// The UI language (`en`, `zh-Hant`); absent or empty follows macOS.
     static let language = "language"
-    /// The office window's frame in screen coordinates, as NSStringFromRect writes it.
-    static let windowFrame = "windowFrame"
-    /// The same in compact view, kept apart so each view keeps its own size.
-    static let windowFrameCompact = "windowFrameCompact"
+    /// The office window's frame in screen coordinates, as NSStringFromRect writes it. (The key is
+    /// compact view's, from when large view kept its own size under "windowFrame".)
+    static let windowFrame = "windowFrameCompact"
     /// The office window's opacity, 0.1 to 1. Default 1 (opaque).
     static let opacity = "opacity"
     /// agent-town's sound volume, 0 to 1. Default 1. Each sound's switch and choice are in SoundKind.
@@ -110,7 +106,6 @@ struct SettingsView: View {
     @AppStorage(Prefs.idleHideSeconds) private var idleSeconds = 5.0
     @AppStorage(Prefs.showTips) private var showTips = true
     @AppStorage(Prefs.checkForUpdatesKey) private var checkUpdates = true
-    @AppStorage(Prefs.largeView) private var large = false
     @State private var openAtLogin = LoginItem.isOn
     @State private var loginNote: String?
 
@@ -149,16 +144,6 @@ struct SettingsView: View {
                 }
             }
             Section(Labels.text("Office")) {
-                Toggle(Labels.text("Large view"), isOn: $large)
-                // The scale is set when the window is made, so a change needs a restart.
-                if large == ViewScale.compact {
-                    HStack {
-                        Text(Labels.text("Restart agent-town to change the view."))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button(Labels.text("Restart now")) { Prefs.relaunch() }
-                    }
-                }
                 Toggle(Labels.text("Hide the window when no Claude Code session is open"), isOn: $hideWithoutSessions)
                 Toggle(Labels.text("Hide idle project blocks"), isOn: $hideIdle)
                 LabeledContent {

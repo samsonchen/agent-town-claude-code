@@ -86,7 +86,7 @@ app/macos/scripts/run-local.sh --fake-update --updates # the update notices, wit
 app/macos/scripts/run-local.sh --demo 02 --pastime juggle  # break time on the bench, juggling only
 ```
 
-Options, any number and in any order: `--demo 01`…`05` (or a path to a fixture), `--live`, `--fake-update`, `--check-now`, `--updates`, `--settings`, `--large`, `--resize WxH`, `--breaks` (break time after 10 idle seconds), `--pastime NAME` (only that pastime), `--sound`, `--zh`, `--en`, `--speed N`, and `--` to pass the rest to the app. `--help` lists them.
+Options, any number and in any order: `--demo 01`…`05` (or a path to a fixture), `--live`, `--fake-update`, `--check-now`, `--updates`, `--settings`, `--resize WxH`, `--breaks` (break time after 10 idle seconds), `--pastime NAME` (only that pastime), `--sound`, `--zh`, `--en`, `--speed N`, and `--` to pass the rest to the app. `--help` lists them.
 
 A demo starts no server, so an installed agent-town keeps working beside it. `--live` quits an installed agent-town first (both would write the same endpoint file) and opens it again when the run ends. It plays sounds as saved, so the menu's Sound item works; a demo is quiet unless `--sound` is given. Neither passes `-showWindow` or (in `--live`) `-sound` on the command line: a setting given there overrides the saved one for the whole run, so the menu could not change it.
 
@@ -101,7 +101,6 @@ These work on the built app, `app/macos/.build/debug/AgentTown`, and through `ru
 | `--settings`, `--updates` | Opens the Settings or the Updates window |
 | `--fake-update` | Makes up a newer app and town-link (99.0.0), without the network |
 | `--check-now` | Makes a real update check (a demo makes no automatic one) |
-| `-largeView YES` | Large view (full size; compact is the default), without changing the saved setting |
 | `--resize WxH` | Eight seconds in, shrinks the window as a drag would, to see auto-scroll |
 | `-breakIdleSeconds N` | Break time on the bench after N idle seconds instead of 180 |
 | `-breakPastime NAME` | Standing characters on a break do only NAME (`juggle`, `cube`, `toss`, `phone`, `chat`, `doze`) |

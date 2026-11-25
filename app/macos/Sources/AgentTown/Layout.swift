@@ -4,15 +4,15 @@ import RealityKit
 import simd
 import TownCore
 
-/// Compact view is the default; Settings → Office → Large view turns it off (read once at launch, so
-/// a change applies after a restart). In compact view the office is drawn at half scale and its
-/// text at 75%, the smallest that stays readable. The layout in meters is the same either way.
+/// The office's drawing scale and text size at its normal size. The office is drawn at half the
+/// scale of the first versions and its text at 75%, the smallest that stays readable; a window
+/// larger than the office draws both larger (`zoom`). (Large view, the full-size setting, was removed
+/// in macOS app 1.0.21: the office grows with the window instead.)
 enum ViewScale {
-    static let compact: Bool = !UserDefaults.standard.bool(forKey: Prefs.largeView)
     /// The office's drawing scale.
-    static let world: CGFloat = compact ? 0.5 : 1
+    static let world: CGFloat = 0.5
     /// Tags, signs, statements and context bars.
-    static let text: CGFloat = compact ? 0.75 : 1
+    static let text: CGFloat = 0.75
     /// How much larger than its normal size the office is drawn now, when the window is larger
     /// than the office (1 to `TownView.maxZoom`). Set by the office view as it draws; text grows with it.
     nonisolated(unsafe) static var zoom: CGFloat = 1

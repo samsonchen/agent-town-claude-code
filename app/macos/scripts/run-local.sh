@@ -12,8 +12,6 @@
 #   --check-now     a real update check against GitHub (a demo makes no automatic check)
 #   --updates       open the Updates window
 #   --settings      open the Settings window
-#   --large         large view (the office at full size; the default is compact, half size), without
-#                   changing the saved setting
 #   --resize WxH    8 seconds in, shrink the window to W by H points, as a drag would (auto-scroll)
 #   --breaks        break time after 10 idle seconds instead of 3 minutes (the bench's pastimes)
 #   --pastime NAME  with --breaks, standing characters do only NAME: juggle, cube, toss, phone,
@@ -45,7 +43,6 @@ while [ $# -gt 0 ]; do
     --live) LIVE=1 ;;
     --fake-update|--check-now|--updates|--settings) ARGS+=("$1") ;;
     --sound) SOUND=YES ;;
-    --large) ARGS+=(-largeView YES) ;;
     --resize) [ $# -ge 2 ] || fail "--resize needs WIDTHxHEIGHT"; ARGS+=(--resize "$2"); shift ;;
     --breaks) ARGS+=(-breakIdleSeconds 10) ;;
     --pastime) [ $# -ge 2 ] || fail "--pastime needs juggle, cube, toss, phone, chat or doze"

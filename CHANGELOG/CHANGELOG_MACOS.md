@@ -6,6 +6,8 @@ What changed in each release of the macOS app. Each version is tagged `v<version
 
 - A large window is filled: maximized or in full screen, the office grows to fit the window (up to three times its normal size), and its names, signs and context bars grow with it. Before, it stayed at its normal size in the middle.
 - In a wide window, project blocks sit side by side in two or more columns, with the executive office centered above them. A narrow window keeps one column.
+- Settings → Large view is gone: the office now grows with the window, so make the window larger to see it larger. If you used Large view, you may need to resize the window once.
+- A window you made wider keeps its larger office when a project block comes or goes; before, its height was reset to the normal size.
 - A click on the menu bar icon brings back a closed office window. While the window is showing, a click opens the menu as before; a right-click or Control-click always opens it.
 
 ## 1.0.20 (2026-11-17)
