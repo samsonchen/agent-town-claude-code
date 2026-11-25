@@ -59,8 +59,8 @@ struct AgentTownApp: App {
                 }
             }
             // Closing the window hides the office; the app keeps running in the menu bar.
-            .onAppear { UserDefaults.standard.set(true, forKey: Prefs.showWindow) }
-            .onDisappear { if !Prefs.quitting { UserDefaults.standard.set(false, forKey: Prefs.showWindow) } }
+            .onAppear { WindowPresence.shared.setWanted(true) }
+            .onDisappear { if !Prefs.quitting { WindowPresence.shared.setWanted(false) } }
         }
         // Room for the executive strip and one project block below it.
         .defaultSize(width: 860, height: 720)

@@ -64,6 +64,10 @@ echo "Building…"
 (cd "$HERE" && swift build -q)
 APP="$HERE/.build/debug/AgentTown"
 
+# Open the window. Saved, not given as -showWindow YES: a value on the command line overrides the
+# saved one for the whole run, so closing the window could not turn Show agent-town off.
+defaults write AgentTown showWindow -bool YES
+
 if [ "$LIVE" = 1 ]; then
   REOPEN=0
   installed() { pgrep -f "AgentTown.app/Contents/MacOS/AgentTown" >/dev/null; }
@@ -76,7 +80,7 @@ if [ "$LIVE" = 1 ]; then
   reopen() { [ "$REOPEN" = 1 ] && open -b ai.careactive.agenttown-claude-code 2>/dev/null || true; }
   trap reopen EXIT
   echo "Running this build with real sessions. Quit it from its menu bar icon or with Ctrl+C."
-  "$APP" -showWindow YES -sound "$SOUND" ${ARGS[@]+"${ARGS[@]}"}
+  "$APP" -sound "$SOUND" ${ARGS[@]+"${ARGS[@]}"}
 else
   case "$FIXTURE" in
     */*|*.json) FILE="$FIXTURE" ;;
@@ -84,5 +88,5 @@ else
   esac
   [ -n "$FILE" ] && [ -f "$FILE" ] || fail "no fixture $FIXTURE in protocol/fixtures"
   echo "Running the demo $(basename "$FILE"). Quit it from its menu bar icon or with Ctrl+C."
-  "$APP" --demo "$FILE" -showWindow YES -sound "$SOUND" ${ARGS[@]+"${ARGS[@]}"}
+  "$APP" --demo "$FILE" -sound "$SOUND" ${ARGS[@]+"${ARGS[@]}"}
 fi

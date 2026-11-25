@@ -13,6 +13,16 @@ final class WindowPresence: ObservableObject {
 
     /// The window is hidden because no session is open.
     @Published private(set) var autoHidden = false
+    /// The user wants the window ("Show agent-town"): saved as `Prefs.showWindow`, and published
+    /// so the menu bar menu redraws when the window's close button turns it off (the menu does not
+    /// see a change made straight to UserDefaults).
+    @Published private(set) var wanted = Prefs.isOn(Prefs.showWindow)
+
+    /// The window was opened or closed (by the menu or its close button).
+    func setWanted(_ on: Bool) {
+        UserDefaults.standard.set(on, forKey: Prefs.showWindow)
+        if wanted != on { wanted = on }
+    }
 
     /// Seconds without a session before the window hides.
     static let delay: TimeInterval = 5

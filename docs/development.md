@@ -97,7 +97,7 @@ These work on the built app, `app/macos/.build/debug/AgentTown`, and through `ru
 | Flag | What it does |
 |---|---|
 | `--demo FILE` | Replays a fixture instead of listening for town-link (`--speed N` plays it faster) |
-| `-showWindow YES`, `-sound NO` | Shows the office window; keeps the demo's sounds quiet |
+| `-showWindow YES`, `-sound NO` | Shows the office window; keeps the demo's sounds quiet. A value given this way overrides the saved one for the whole run, so the window's close button cannot turn Show agent-town off; `run-local.sh` saves `showWindow` instead (`defaults write AgentTown showWindow -bool YES`) |
 | `--settings`, `--updates` | Opens the Settings or the Updates window |
 | `--fake-update` | Makes up a newer app and town-link (99.0.0), without the network |
 | `--check-now` | Makes a real update check (a demo makes no automatic one) |

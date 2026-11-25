@@ -105,7 +105,6 @@ enum Prefs {
 struct TownMenu: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismissWindow) private var dismissWindow
-    @AppStorage(Prefs.showWindow) private var showWindow = true
     @AppStorage(Prefs.stayOnTop) private var stayOnTop = false
     @AppStorage(Prefs.sound) private var sound = true
     @ObservedObject private var updater = Updater.shared
@@ -125,7 +124,7 @@ struct TownMenu: View {
         }
         Divider()
         // While hidden for having no session, the item is off; choosing it shows the office anyway.
-        Toggle(Labels.text("Show agent-town"), isOn: Binding(get: { showWindow && !presence.autoHidden }, set: { on in
+        Toggle(Labels.text("Show agent-town"), isOn: Binding(get: { presence.wanted && !presence.autoHidden }, set: { on in
             if on {
                 presence.showNow()
                 openWindow(id: "town")
@@ -133,7 +132,7 @@ struct TownMenu: View {
             } else {
                 dismissWindow(id: "town")
             }
-            showWindow = on
+            presence.setWanted(on)
         }))
         Toggle(Labels.text("Stay on top"), isOn: $stayOnTop)
         Toggle(Labels.text("Sound"), isOn: $sound)
