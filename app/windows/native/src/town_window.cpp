@@ -13,7 +13,7 @@ namespace {
 constexpr UINT_PTR SUBCLASS_ID = 0x70776E; // "twn"
 
 // The office window is kept off the taskbar by being owned by a hidden window: Windows gives an
-// owned window no taskbar button. (Until Windows app 1.0.12 it had the tool-window style instead,
+// owned window no taskbar button. (Until Windows app 1.0.13 it had the tool-window style instead,
 // whose title bar has only a close button, so the window could not be maximized.)
 LONG_PTR owned_ex_style(LONG_PTR ex) {
 	return ex & ~static_cast<LONG_PTR>(WS_EX_APPWINDOW | WS_EX_TOOLWINDOW);

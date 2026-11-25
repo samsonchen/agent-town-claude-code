@@ -24,7 +24,7 @@ A GDExtension in `app/windows/native/` (C++, built with `godot-cpp` 10.0.0, a su
 
 | Method | What it does |
 |---|---|
-| `hide_from_taskbar(hwnd)` | Makes the window owned by a hidden window the add-on creates (`GWLP_HWNDPARENT`): Windows gives an owned window no taskbar button. Removes `WS_EX_APPWINDOW`, `WS_EX_TOOLWINDOW` and the minimize button, and hooks style changes (`WM_STYLECHANGING`), because Godot rebuilds the styles when its own flags change and would otherwise bring them back; a minimize (`SC_MINIMIZE`, Win+Down) is ignored, since a minimized window with no taskbar button is hard to find. Until 1.0.12 it gave the window the tool-window style instead, whose title bar has only a close button, so the window could not be maximized |
+| `hide_from_taskbar(hwnd)` | Makes the window owned by a hidden window the add-on creates (`GWLP_HWNDPARENT`): Windows gives an owned window no taskbar button. Removes `WS_EX_APPWINDOW`, `WS_EX_TOOLWINDOW` and the minimize button, and hooks style changes (`WM_STYLECHANGING`), because Godot rebuilds the styles when its own flags change and would otherwise bring them back; a minimize (`SC_MINIMIZE`, Win+Down) is ignored, since a minimized window with no taskbar button is hard to find. Until 1.0.13 it gave the window the tool-window style instead, whose title bar has only a close button, so the window could not be maximized |
 | `is_hidden_from_taskbar(hwnd)` | Whether the window has no taskbar button (owned without `WS_EX_APPWINDOW`, or a tool window) |
 | `set_shown(hwnd, shown)` | Hides or shows the window (`ShowWindow`; a minimized window is restored); Godot itself refuses to hide its main window |
 | `is_shown(hwnd)` | Whether the window is visible |
