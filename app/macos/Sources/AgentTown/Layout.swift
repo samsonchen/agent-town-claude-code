@@ -7,7 +7,7 @@ import TownCore
 /// The office's drawing scale and text size at its normal size. The office is drawn at half the
 /// scale of the first versions and its text at 75%, the smallest that stays readable; a window
 /// larger than the office draws both larger (`zoom`). (Large view, the full-size setting, was removed
-/// in macOS app 1.0.21: the office grows with the window instead.)
+/// in macOS app 1.0.22: the office grows with the window instead.)
 enum ViewScale {
     /// The office's drawing scale.
     static let world: CGFloat = 0.5
