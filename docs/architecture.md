@@ -195,7 +195,7 @@ Registered with `immediate: true` so it works while Claude is busy.
 
 | Module | Technology | Job |
 |---|---|---|
-| Shell | SwiftUI, `MenuBarExtra` | Main window, menu bar menu, settings, About |
+| Shell | SwiftUI windows; an AppKit `NSStatusItem` for the menu bar icon and menu (`MenuBar.swift`) | Main window, menu bar icon and menu, settings, About |
 | Loopback server | Network.framework (`NWListener`) | Binds 127.0.0.1 on a random port; checks the token and protocol version; writes the endpoint file |
 | Building state | Swift model | Project blocks, sessions, characters, pending approvals. Pure logic, unit-tested with fixtures; `Snapshot.swift` writes the language-neutral state checked against `protocol/fixtures/expected/`. |
 | Choreographer | Swift (`TownScene`, `TownScene+Staff`, `TownScene+CEO`, `TownScene+Blocks`) | Turns state changes into per-character action queues; applies the timing rules. Handles calls, walking along the block walkways, the bench, staff, operators, approvals and messages. `TownScene+CEO` handles the CEO under the user's control: the arrow keys, H and clicks on the floor, walking around furniture (grid path search), the mobile phone, and the statements characters give the CEO. `TownScene+Blocks` places the project blocks: each is on screen from its first session to its last, in one column under the executive block, or, with Settings → Hide idle project blocks on, only while it has work (a watch twice a second hides a block settled for the set seconds; a hidden block's context bars are listed, named by project, under the executive block, and the project blocks move down to make room) |

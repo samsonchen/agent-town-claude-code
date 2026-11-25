@@ -83,37 +83,33 @@ struct AgentTownApp: App {
             .defaultLaunchBehavior(.suppressed)
             .restorationBehavior(.disabled)
 
-        // The system "building" symbol: macOS sizes it for the menu bar and colors it for light
-        // mode, dark mode and an open menu.
-        MenuBarExtra {
-            TownMenu()
-        } label: {
-            LaunchOpener()
-        }
+        // The menu bar icon and its menu are an AppKit status item (MenuBar), started by the app delegate.
     }
 }
 
-/// The menu bar icon, with a dot while an update is available. It also opens the office window at launch when it should be open but is not:
-/// started at login, the app gets no window from `defaultLaunchBehavior(.presented)`, and the user
-/// had to hide and show it. The label is built at launch, unlike the menu, so it can do this.
-private struct LaunchOpener: View {
+/// SwiftUI's window actions for the AppKit side (the menu bar icon, update notices), from a view
+/// hosted in the menu bar icon. It also opens the office window at launch when it should be open
+/// but is not: started at login, the app gets no window from `defaultLaunchBehavior(.presented)`,
+/// and the user had to hide and show it. The icon is built at launch, so this runs then.
+struct WindowActions: View {
     @Environment(\.openWindow) private var openWindow
-    @ObservedObject private var updater = Updater.shared
+    @Environment(\.dismissWindow) private var dismissWindow
 
     var body: some View {
-        // With a dot while an update is available (spec: Updates).
-        Image(nsImage: MenuIcon.image(dot: updater.hasUpdate))
+        Color.clear
+            .frame(width: 0, height: 0)
             .task {
                 let args = CommandLine.arguments
-                let open = openWindow
-                updater.openWindow = { open(id: $0) }
+                let open = openWindow, dismiss = dismissWindow
+                Updater.shared.openWindow = { open(id: $0) }
+                MenuBar.shared.openWindow = { open(id: $0) }
+                MenuBar.shared.dismissWindow = { dismiss(id: $0) }
                 if args.contains("--settings") { openWindow(id: "settings") } // to look at Settings
                 if args.contains("--updates") { openWindow(id: "updates") } // to look at the Updates window
                 guard Prefs.isOn(Prefs.showWindow), !args.contains("--demo"), !args.contains("--spike") else { return }
                 // Give SwiftUI the first chance to present the window itself.
                 try? await Task.sleep(for: .seconds(1.5))
-                let shown = NSApp.windows.contains { $0.isVisible && $0.title == "agent-town" }
-                guard !shown else { return }
+                guard !MenuBar.officeShown else { return }
                 openWindow(id: "town")
                 NSApp.activate(ignoringOtherApps: true)
             }
@@ -197,6 +193,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // A menu bar app: no Dock icon and not in ⌘-Tab. The window comes to the front when shown.
+        MainActor.assumeIsolated { MenuBar.shared.start() }
         NSApp.setActivationPolicy(.accessory)
         NSApp.activate(ignoringOtherApps: true)
     }

@@ -101,53 +101,6 @@ enum Prefs {
     }
 }
 
-/// The menu bar menu: any update notices, About, show the window, stay on top, sound, Settings and Quit.
-struct TownMenu: View {
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismissWindow) private var dismissWindow
-    @AppStorage(Prefs.stayOnTop) private var stayOnTop = false
-    @AppStorage(Prefs.sound) private var sound = true
-    @ObservedObject private var updater = Updater.shared
-    @ObservedObject private var presence = WindowPresence.shared
-
-    var body: some View {
-        if let r = updater.appUpdate {
-            Button(String(format: Labels.text("agent-town %@ is available…"), r.version)) { updater.showWindow() }
-        }
-        if let v = updater.pluginUpdate {
-            Button(String(format: Labels.text("town-link %@ is available…"), v)) { updater.showWindow() }
-        }
-        if updater.hasUpdate { Divider() }
-        Button(Labels.text("About agent-town")) {
-            openWindow(id: "about")
-            NSApp.activate(ignoringOtherApps: true)
-        }
-        Divider()
-        // While hidden for having no session, the item is off; choosing it shows the office anyway.
-        Toggle(Labels.text("Show agent-town"), isOn: Binding(get: { presence.wanted && !presence.autoHidden }, set: { on in
-            if on {
-                presence.showNow()
-                openWindow(id: "town")
-                NSApp.activate(ignoringOtherApps: true)
-            } else {
-                dismissWindow(id: "town")
-            }
-            presence.setWanted(on)
-        }))
-        Toggle(Labels.text("Stay on top"), isOn: $stayOnTop)
-        Toggle(Labels.text("Sound"), isOn: $sound)
-        Divider()
-        Button(Labels.text("Settings…")) {
-            openWindow(id: "settings")
-            NSApp.activate(ignoringOtherApps: true)
-        }
-        .keyboardShortcut(",")
-        Divider()
-        Button(Labels.text("Quit agent-town")) { NSApp.terminate(nil) }
-            .keyboardShortcut("q")
-    }
-}
-
 /// Settings: Open at login, the language, the office window (opacity, idle blocks, tips), the sounds and updates.
 struct SettingsView: View {
     @AppStorage(Prefs.language) private var language = ""

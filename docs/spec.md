@@ -215,7 +215,7 @@ The default is to be decided (see [roadmap.md](roadmap.md)).
 
 ## Menu bar
 
-The app runs in the menu bar, with no Dock icon. Its menu:
+The app runs in the menu bar, with no Dock icon. A click on its icon while the office window is hidden (closed, or hidden for having no session) shows the window; while the window is showing, a click opens the menu. A right-click or Control-click always opens the menu (since macOS app 1.0.21; before, every click opened the menu). On Windows, a left click on the tray icon shows the window and a right click opens the menu. The menu is built each time it opens, so its check marks match the window and settings at that moment (Mac: an AppKit status item, `MenuBar.swift`; SwiftUI's MenuBarExtra could not tell a click from the menu opening on recent macOS). Its menu:
 
 - **agent-town X is available…** and **town-link X is available…** at the top, only while there is an update (see "Updates" below). Each opens the Updates window.
 - **About agent-town** opens a window with the version and build number, the author (Samson Chen), the license (Apache 2.0) with a link, the repository link, and the third-party components with links to each one and its license (Kenney Mini Characters and Kenney Furniture Kit, CC0 1.0).
