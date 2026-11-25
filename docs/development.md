@@ -88,7 +88,7 @@ app/macos/scripts/run-local.sh --demo 02 --pastime juggle  # break time on the b
 
 Options, any number and in any order: `--demo 01`…`05` (or a path to a fixture), `--live`, `--fake-update`, `--check-now`, `--updates`, `--settings`, `--large`, `--resize WxH`, `--breaks` (break time after 10 idle seconds), `--pastime NAME` (only that pastime), `--sound`, `--zh`, `--en`, `--speed N`, and `--` to pass the rest to the app. `--help` lists them.
 
-A demo starts no server, so an installed agent-town keeps working beside it. `--live` quits an installed agent-town first (both would write the same endpoint file) and opens it again when the run ends.
+A demo starts no server, so an installed agent-town keeps working beside it. `--live` quits an installed agent-town first (both would write the same endpoint file) and opens it again when the run ends. It plays sounds as saved, so the menu's Sound item works; a demo is quiet unless `--sound` is given. Neither passes `-showWindow` or (in `--live`) `-sound` on the command line: a setting given there overrides the saved one for the whole run, so the menu could not change it.
 
 ### The app's development flags
 

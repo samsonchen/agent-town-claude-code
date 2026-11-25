@@ -4,7 +4,8 @@
 #
 #   app/macos/scripts/run-local.sh                 a demo: fixture 05 (two projects), no sounds
 #   app/macos/scripts/run-local.sh --demo 02       another fixture: 01 to 05, or a path to one
-#   app/macos/scripts/run-local.sh --live          real Claude Code sessions instead of a demo
+#   app/macos/scripts/run-local.sh --live          real Claude Code sessions instead of a demo, with
+#                                                  sound as saved (the menu's Sound item works)
 #
 # Options (any number, in any order):
 #   --fake-update   a made-up newer agent-town and town-link (99.0.0), without the network
@@ -80,7 +81,9 @@ if [ "$LIVE" = 1 ]; then
   reopen() { [ "$REOPEN" = 1 ] && open -b ai.careactive.agenttown-claude-code 2>/dev/null || true; }
   trap reopen EXIT
   echo "Running this build with real sessions. Quit it from its menu bar icon or with Ctrl+C."
-  "$APP" -sound "$SOUND" ${ARGS[@]+"${ARGS[@]}"}
+  # Sound as saved (the menu's Sound item works): a -sound on the command line would override the
+  # saved setting for the whole run, so the menu could not turn it on or off.
+  "$APP" ${ARGS[@]+"${ARGS[@]}"}
 else
   case "$FIXTURE" in
     */*|*.json) FILE="$FIXTURE" ;;
