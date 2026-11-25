@@ -12,18 +12,43 @@ namespace {
 
 constexpr UINT_PTR SUBCLASS_ID = 0x70776E; // "twn"
 
-LONG_PTR tool_style(LONG_PTR ex) {
-	return (ex | WS_EX_TOOLWINDOW) & ~static_cast<LONG_PTR>(WS_EX_APPWINDOW);
+// The office window is kept off the taskbar by being owned by a hidden window: Windows gives an
+// owned window no taskbar button. (Until Windows app 1.0.12 it had the tool-window style instead,
+// whose title bar has only a close button, so the window could not be maximized.)
+LONG_PTR owned_ex_style(LONG_PTR ex) {
+	return ex & ~static_cast<LONG_PTR>(WS_EX_APPWINDOW | WS_EX_TOOLWINDOW);
 }
 
-// Godot rebuilds the window's extended style when its own flags change (always on top, borderless …),
-// which would bring the taskbar button back. This keeps the tool-window style in every such change.
-LRESULT CALLBACK keep_tool_window(HWND h, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR) {
+// No minimize button: a minimized window with no taskbar button would be hard to find again (the
+// tray icon brings the window back, and closing it hides it).
+LONG_PTR owned_style(LONG_PTR style) {
+	return style & ~static_cast<LONG_PTR>(WS_MINIMIZEBOX);
+}
+
+// The hidden owner, made once.
+HWND hidden_owner() {
+	static HWND owner = nullptr;
+	if (owner == nullptr || !IsWindow(owner)) {
+		owner = CreateWindowExW(0, L"STATIC", L"agent-town owner", WS_POPUP, 0, 0, 0, 0, nullptr, nullptr,
+				GetModuleHandleW(nullptr), nullptr);
+	}
+	return owner;
+}
+
+// Godot rebuilds the window's styles when its own flags change (always on top, borderless …),
+// which could bring the taskbar button or the minimize button back. This keeps them out in every
+// such change, and turns a minimize (Win+Down) into nothing.
+LRESULT CALLBACK keep_off_taskbar(HWND h, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR) {
 	if (msg == WM_STYLECHANGING && wp == static_cast<WPARAM>(GWL_EXSTYLE)) {
 		STYLESTRUCT *s = reinterpret_cast<STYLESTRUCT *>(lp);
-		s->styleNew = static_cast<DWORD>(tool_style(s->styleNew));
+		s->styleNew = static_cast<DWORD>(owned_ex_style(s->styleNew));
+	} else if (msg == WM_STYLECHANGING && wp == static_cast<WPARAM>(GWL_STYLE)) {
+		STYLESTRUCT *s = reinterpret_cast<STYLESTRUCT *>(lp);
+		s->styleNew = static_cast<DWORD>(owned_style(s->styleNew));
+	} else if (msg == WM_SYSCOMMAND && (wp & 0xFFF0) == SC_MINIMIZE) {
+		return 0;
 	} else if (msg == WM_NCDESTROY) {
-		RemoveWindowSubclass(h, keep_tool_window, id);
+		RemoveWindowSubclass(h, keep_off_taskbar, id);
 	}
 	return DefSubclassProc(h, msg, wp, lp);
 }
@@ -40,33 +65,42 @@ void TownWindow::_bind_methods() {
 	ClassDB::bind_static_method("TownWindow", D_METHOD("get_owner", "hwnd"), &TownWindow::get_owner);
 }
 
-// Windows gives no taskbar button to a tool window. The style only takes effect on the taskbar
-// when the window is shown again, so a visible window is hidden and shown around the change.
+// Windows gives no taskbar button to an owned window. The change only takes effect on the taskbar
+// when the window is shown again, so a visible window is hidden and shown around it.
 bool TownWindow::hide_from_taskbar(int64_t hwnd) {
 	HWND h = reinterpret_cast<HWND>(hwnd);
-	if (!IsWindow(h)) {
+	HWND owner = hidden_owner();
+	if (!IsWindow(h) || owner == nullptr) {
 		return false;
 	}
-	SetWindowSubclass(h, keep_tool_window, SUBCLASS_ID, 0); // a second call only updates it
+	SetWindowSubclass(h, keep_off_taskbar, SUBCLASS_ID, 0); // a second call only updates it
 	LONG_PTR ex = GetWindowLongPtrW(h, GWL_EXSTYLE);
-	LONG_PTR want = tool_style(ex);
-	if (want == ex) {
+	LONG_PTR style = GetWindowLongPtrW(h, GWL_STYLE);
+	if (GetWindow(h, GW_OWNER) == owner && owned_ex_style(ex) == ex && owned_style(style) == style) {
 		return true;
 	}
 	bool visible = IsWindowVisible(h) != FALSE;
 	if (visible) {
 		ShowWindow(h, SW_HIDE);
 	}
-	SetWindowLongPtrW(h, GWL_EXSTYLE, want);
+	SetWindowLongPtrW(h, GWLP_HWNDPARENT, reinterpret_cast<LONG_PTR>(owner));
+	SetWindowLongPtrW(h, GWL_EXSTYLE, owned_ex_style(ex));
+	SetWindowLongPtrW(h, GWL_STYLE, owned_style(style));
+	SetWindowPos(h, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
 	if (visible) {
 		ShowWindow(h, SW_SHOWNA);
 	}
 	return true;
 }
 
+// No taskbar button: owned and without WS_EX_APPWINDOW, or a tool window.
 bool TownWindow::is_hidden_from_taskbar(int64_t hwnd) {
 	HWND h = reinterpret_cast<HWND>(hwnd);
-	return IsWindow(h) && (GetWindowLongPtrW(h, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) != 0;
+	if (!IsWindow(h)) {
+		return false;
+	}
+	LONG_PTR ex = GetWindowLongPtrW(h, GWL_EXSTYLE);
+	return (ex & WS_EX_TOOLWINDOW) != 0 || (GetWindow(h, GW_OWNER) != nullptr && (ex & WS_EX_APPWINDOW) == 0);
 }
 
 // Godot cannot hide its main window; this hides or shows it the Windows way.
@@ -76,7 +110,7 @@ void TownWindow::set_shown(int64_t hwnd, bool shown) {
 		return;
 	}
 	if (shown) {
-		ShowWindow(h, SW_SHOW);
+		ShowWindow(h, IsIconic(h) ? SW_RESTORE : SW_SHOW);
 		SetForegroundWindow(h);
 	} else {
 		ShowWindow(h, SW_HIDE);

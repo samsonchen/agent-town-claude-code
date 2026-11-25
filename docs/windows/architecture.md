@@ -24,9 +24,9 @@ A GDExtension in `app/windows/native/` (C++, built with `godot-cpp` 10.0.0, a su
 
 | Method | What it does |
 |---|---|
-| `hide_from_taskbar(hwnd)` | Gives the window the tool-window style (no taskbar button) and hooks its style changes (`WM_STYLECHANGING`), because Godot rebuilds the style when its own flags change and would otherwise bring the button back |
-| `is_hidden_from_taskbar(hwnd)` | Whether the style is set |
-| `set_shown(hwnd, shown)` | Hides or shows the window (`ShowWindow`); Godot itself refuses to hide its main window |
+| `hide_from_taskbar(hwnd)` | Makes the window owned by a hidden window the add-on creates (`GWLP_HWNDPARENT`): Windows gives an owned window no taskbar button. Removes `WS_EX_APPWINDOW`, `WS_EX_TOOLWINDOW` and the minimize button, and hooks style changes (`WM_STYLECHANGING`), because Godot rebuilds the styles when its own flags change and would otherwise bring them back; a minimize (`SC_MINIMIZE`, Win+Down) is ignored, since a minimized window with no taskbar button is hard to find. Until 1.0.12 it gave the window the tool-window style instead, whose title bar has only a close button, so the window could not be maximized |
+| `is_hidden_from_taskbar(hwnd)` | Whether the window has no taskbar button (owned without `WS_EX_APPWINDOW`, or a tool window) |
+| `set_shown(hwnd, shown)` | Hides or shows the window (`ShowWindow`; a minimized window is restored); Godot itself refuses to hide its main window |
 | `is_shown(hwnd)` | Whether the window is visible |
 | `show_without_focus(hwnd)` | Shows a hidden window without activating it (`SW_SHOWNA`), for the office coming back when a session opens (`shell/window_presence.gd`); an add-on built before it shows the window the usual way |
 | `set_owner(hwnd, owner_hwnd)` | Makes the office window the owner of Settings, About and Updates (`GWLP_HWNDPARENT`), so Windows keeps them above it, also when Stay on top is on and the office is clicked; Godot gives its sub-windows no owner. `main.gd` calls it each time one of them is shown, because Godot makes a new native window on every show. 0 removes the owner |
