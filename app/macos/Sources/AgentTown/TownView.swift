@@ -213,7 +213,8 @@ struct TownView: View {
                 let restored = WindowPlace.restore(w)
                 // Sessions already open when the window opens; a restored size the user made smaller stays.
                 fitWindow(in: w, before: restored ? scene.officeSize : nil)
-                WindowPlace.keep(w)
+                // A saved frame on a display that connects later is restored then, and fitted like this one.
+                WindowPlace.keep(w) { w in fitWindow(in: w, before: scene.officeSize) }
                 // --resize WIDTHxHEIGHT: 8 seconds in, once the demo's blocks are open, shrink the window as a user's
                 // drag would, to see auto-scroll.
                 let args = CommandLine.arguments
@@ -604,7 +605,7 @@ extension View {
 
     static let key = Prefs.windowFrame
 
-    /// Moves the window to its saved frame, if that is still on a connected display; true if it did
+    /// Moves the window to its saved frame, if that is on a connected display; true if it did
     /// (false for a new installation's first placement, which the user has not sized).
     /// With no saved frame (a new installation), the window opens at the smallest width in the
     /// screen's top-right corner; its height still fits the office.
@@ -626,23 +627,55 @@ extension View {
         }
         r.size.width = max(r.width, TownView.minSize.width)
         r.size.height = max(r.height, TownView.minSize.height)
-        guard NSScreen.screens.contains(where: { $0.visibleFrame.intersection(r).width >= 100 && $0.visibleFrame.intersection(r).height >= 100 })
-        else { return false }
+        guard onScreen(r) else {
+            // Its display is not connected (yet: at login an external display can come later). Keep the
+            // saved frame, and move the window there when that display connects (`keep`).
+            if !fresh { waiting = r }
+            return false
+        }
+        waiting = nil
         w.setFrame(r, display: true)
         return !fresh // a placed new window is not a size the user made: it still grows to fit the office
     }
 
-    /// Saves the frame each time the window moves or is resized.
-    static func keep(_ w: NSWindow) {
+    /// A saved frame whose display was not connected when the window opened: it stays saved until
+    /// that display connects (the window then moves there) or the user moves or resizes the window.
+    private static var waiting: NSRect?
+
+    /// True if at least 100 × 100 points of `r` are on a connected display.
+    private static func onScreen(_ r: NSRect) -> Bool {
+        NSScreen.screens.contains { $0.visibleFrame.intersection(r).width >= 100 && $0.visibleFrame.intersection(r).height >= 100 }
+    }
+
+    /// Saves the frame each time the window moves or is resized. While a saved frame waits for its
+    /// display, only the user's own drag or resize replaces it (not the place macOS or the app gave
+    /// the window); `placed` runs after the window is moved back to it.
+    static func keep(_ w: NSWindow, placed: @escaping @MainActor (NSWindow) -> Void = { _ in }) {
         observers.forEach(NotificationCenter.default.removeObserver)
         let save: (Notification) -> Void = { n in
             guard let w = n.object as? NSWindow, !w.styleMask.contains(.fullScreen) else { return }
-            UserDefaults.standard.set(NSStringFromRect(w.frame), forKey: key)
+            MainActor.assumeIsolated {
+                if waiting != nil {
+                    guard NSEvent.pressedMouseButtons != 0 else { return } // not the user's drag or resize
+                    waiting = nil
+                }
+                UserDefaults.standard.set(NSStringFromRect(w.frame), forKey: key)
+            }
         }
         observers = [NSWindow.didMoveNotification, NSWindow.didResizeNotification].map {
             NotificationCenter.default.addObserver(forName: $0, object: w, queue: .main, using: save)
         }
-        UserDefaults.standard.set(NSStringFromRect(w.frame), forKey: key)
+        observers.append(NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main
+        ) { [weak w] _ in
+            MainActor.assumeIsolated {
+                guard let w, let r = waiting, onScreen(r) else { return }
+                waiting = nil
+                w.setFrame(r, display: true)
+                placed(w)
+            }
+        })
+        if waiting == nil { UserDefaults.standard.set(NSStringFromRect(w.frame), forKey: key) }
     }
 }
 

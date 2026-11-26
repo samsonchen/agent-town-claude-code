@@ -2,6 +2,10 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.23 (2026-11-26)
+
+- The office window keeps its place on a second display across restarts. Before, if that display was not ready yet when agent-town opened at login, the window opened somewhere else and its saved place was lost; now the window moves back when the display connects, unless you have moved it yourself in the meantime.
+
 ## 1.0.22 (2026-11-26)
 
 - Settings → Large view is gone: the office now grows with the window, so make the window larger to see it larger. If you used Large view, you may need to resize the window once.
