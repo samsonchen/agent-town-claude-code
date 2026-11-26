@@ -70,6 +70,8 @@ var _auto_paused_until := 0
 var _auto_target: Variant = null ## Vector2 pan, or null
 var _auto_clock := 0.0
 var _columns_at := -1 ## msec when the column count is chosen next; -1 when nothing changed
+var _place := WindowPlace.new() ## when the window's place is saved, and a saved place waiting for its screen
+var _place_check_at := 0 ## msec when a waiting place is checked for its screen next
 
 
 func _ready() -> void:
@@ -124,6 +126,7 @@ func _ready() -> void:
 	presence.user_wants_window = func() -> bool: return settings.show_window
 	presence.hide_window.connect(func() -> void:
 		_remember_window()
+		settings.save()
 		_call_window("set_shown", [_hwnd(), false])
 		_sync_menu())
 	presence.show_window.connect(_show_without_focus)
@@ -557,19 +560,55 @@ func _restore_window() -> void:
 		var title := w.position.y - w.get_position_with_decorations().y
 		w.position = Vector2i(usable.end.x - NEW_WINDOW_INSET - MIN_SIZE.x, usable.position.y + NEW_WINDOW_INSET + title)
 		return
-	if settings.window_position == null or settings.window_screen < 0 or settings.window_screen >= DisplayServer.get_screen_count():
+	if settings.window_position == null:
 		return
+	# Its screen is not connected (yet: at login an external display can come later). Keep the saved
+	# place, and move the window there when that screen connects (_keep_place).
+	_place.waiting = not _place_saved() and not _args.has("snapshot")
+
+
+## Moves the window to its saved place, if that is on a connected screen; true if it did.
+func _place_saved() -> bool:
+	var w := get_window()
+	if settings.window_screen < 0 or settings.window_screen >= DisplayServer.get_screen_count():
+		return false
 	var rect := DisplayServer.screen_get_usable_rect(settings.window_screen)
 	var pos: Vector2i = settings.window_position
 	if not rect.has_point(pos + Vector2i(40, 10)):
-		return
+		return false
 	var width := mini(maxi(settings.window_width, MIN_SIZE.x), rect.size.x) if settings.window_width > 0 else w.size.x
 	var height := mini(maxi(settings.window_height, MIN_SIZE.y), rect.size.y) if settings.window_height > 0 else w.size.y
 	w.size = Vector2i(width, height)
 	w.position = pos
+	return true
 
 
+## Saves the window's place after each move or resize, once it settles (WindowPlace), so a
+## force-closed app still opens where it was. A saved place waiting for its screen is checked once a
+## second: when the screen connects, the window moves back there and its height fits the office.
+## Not in a snapshot run, which must not change the user's settings.
+func _keep_place() -> void:
+	if _args.has("snapshot"):
+		return
+	var w := get_window()
+	var now := Time.get_ticks_msec()
+	if _place.waiting and now >= _place_check_at:
+		_place_check_at = now + 1000
+		if w.mode == Window.MODE_WINDOWED and _place_saved():
+			_place.waiting = false
+			_fit_window(scene.office_size)
+	# GetKeyState on Windows: a button held on the title bar or a border counts, as in a drag.
+	var mouse_down := DisplayServer.mouse_get_button_state() != 0
+	if _place.step(Rect2i(w.position, w.size), w.mode == Window.MODE_WINDOWED, mouse_down, now):
+		_remember_window()
+		settings.save()
+
+
+## Copies the window's place into the settings (saved with them). A saved place waiting for its
+## screen is kept instead.
 func _remember_window() -> void:
+	if _place.waiting:
+		return
 	var w := get_window()
 	settings.window_position = w.position
 	settings.window_width = w.size.x
@@ -659,6 +698,7 @@ func _fit_window(before: Variant = null) -> void:
 
 func _process(delta: float) -> void:
 	_auto_clock += delta
+	_keep_place()
 	if _columns_at >= 0 and Time.get_ticks_msec() >= _columns_at:
 		_columns_at = -1
 		_choose_columns()

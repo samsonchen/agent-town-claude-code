@@ -2,6 +2,11 @@
 
 What changed in each release of the Windows app. Each version is tagged `windows-v<version>` in this repository, and `git log windows-v<previous>..windows-v<version>` lists its commits. The macOS app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.14 (2026-11-26)
+
+- The office window keeps its place and size across upgrades and restarts. Before, they were saved only when you quit from the tray or hid the window, so an upgrade (which closes the app) or a Windows restart lost every move since. Now each move or resize is saved a moment after it.
+- If the window's display is not connected yet when agent-town opens (an external display at sign-in), its saved place is kept, and the window moves back when that display connects, unless you have moved it yourself in the meantime.
+
 ## 1.0.13 (2026-11-26)
 
 - The office window can be maximized: its title bar now has a maximize button (it had only a close button). It still has no taskbar button, and minimize stays off (Windows shows its button grayed out next to maximize).
