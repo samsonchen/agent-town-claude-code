@@ -236,7 +236,7 @@ On the Mac, a background shell (a long render) lost its operator after the compu
 
 - [ ] Windows: add `paused(ms)` to `core/building.gd` (each chief's `last_event_ts += ms`) and, in `core/town_store.gd`, remember the wall time of the last step; when more than 10 s passed since it, call `paused` with the gap before `expire_stale`. Use wall time (`Time.get_unix_time_from_system()`), as `last_event_ts` is wall time. Add the test as on the Mac (`tests/`).
 - [ ] Windows, by hand: many Windows 11 laptops use Modern Standby, where processes may keep running asleep, so the symptom depends on the machine. Start a long background shell in Claude Code (`sleep 900` in the background), put the PC to sleep for 5 minutes or more, wake it: the operator is still in the server room. Try before and after the fix.
-- [ ] Mac, by hand: the same with a released 1.0.25 (sleep from the Apple menu, 5 minutes or more).
+- [x] Mac, by hand: the operator stays through a suspension longer than 2 minutes (checked by the user with the 1.0.25 build from `run-local.sh --live`, 2026-11-26).
 
 ### Windows app: keep the window's saved place (found 2026-11-26; macOS app 1.0.23, Windows app 1.0.14)
 
