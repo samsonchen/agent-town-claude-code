@@ -11,7 +11,7 @@ How it works, in plain terms:
 - Scheduled and repeating tasks are handled by a Dispatcher with a board of cards; work sent back by a check goes past an Inspector at reception.
 - When Claude Code needs the user's approval, the CEO's phone rings. Sounds play when work is dispatched, done, or waiting for approval.
 - Each open project has its own office block, with the task's title on its sign and a bar showing how full the session's context is.
-- The office starts in compact view for laptop screens (Settings has a large view), hiding idle projects, sounds, opacity, and English or Traditional Chinese.
+- The office is drawn to fit the window, small in a corner and larger when the window grows; settings for hiding idle projects, sounds, opacity, and English or Traditional Chinese.
 
 It only watches: it never changes what Claude Code does. Events go only to the app on the user's own computer; the plugin asks Claude's Haiku model, on the user's own plan, for short task titles and roles; the app checks GitHub once a day for updates (can be turned off).
 
