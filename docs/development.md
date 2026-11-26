@@ -19,7 +19,7 @@ How the repository is laid out, how to run the plugin and the apps from source, 
 | `app/windows/` | The Windows app (Godot, typed GDScript). It keeps copies of shared files in `app/windows/shared/` (see "Shared files" below). |
 | `protocol/` | The JSON schema (`schema/v1.schema.json`), recorded event streams in `fixtures/`, and in `fixtures/expected/` the building state each fixture must produce, which both apps are tested against. |
 | `catalog/` | Roles, departments, task types and models, shared by the plugin and both apps. |
-| `tools/` | `debug-receiver.py` (a stand-in for the app), `sync-windows-assets.py`, `build-plugin-catalog.py`, `convert-assets.py`. |
+| `tools/` | `debug-receiver.py` (a stand-in for the app), `check-claude-code.py` (town-link in a real Claude Code session), `sync-windows-assets.py`, `build-plugin-catalog.py`, `convert-assets.py`. |
 | `site/` | The project's web page (home and privacy policy; English, and Traditional Chinese in `site/zh-TW/`), published to GitHub Pages by `.github/workflows/pages.yml` whenever `site/` changes on `main`. Plain HTML and CSS, with `copy.js` for the copy icon on each command box (`<pre class="cmd">`); preview it with `python3 -m http.server` in `site/`. |
 | `Casks/agent-town.rb` | The Homebrew cask: the repository is also a Homebrew tap. |
 | `.claude-plugin/marketplace.json` | Makes the repository a plugin marketplace (`agent-town-claude-code`). |
@@ -46,7 +46,10 @@ Checks:
 ```bash
 claude plugin validate plugin            # what the plugin hooks and calls, and what Claude Code would refuse
 claude plugin test plugin
+python3 tools/check-claude-code.py       # town-link in a real Claude Code session (python on Windows)
 ```
+
+`check-claude-code.py` is part of the checks for every change, to the plugin or to either app, and worth running after Claude Code updates itself. The plugin tests feed in what we wrote; this runs one short `claude -p` session with this checkout's town-link and a test Stop hook, and checks what Claude Code really sends: the session reaches the app and passes the schema, the Stop hook's block arrives as `ticket.return` with its reason (town-link reads it from the note Claude Code stores, which starts "Stop hook feedback:"), and Claude Code shows no "town-link: its … hook was skipped" line (only `session.compact` may be skipped, where an organization manages Claude Code). It needs `claude` signed in and makes one small Haiku request. It doesn't touch a running app: Claude Code runs with `APPDATA` pointed at a temporary folder, so town-link reports to the script. `--verbose` prints the events and Claude Code's output; `--plugin DIR` checks another copy of town-link.
 
 Users get a plugin change only through a new version: raise `version` in `plugin/.claude-plugin/plugin.json` with any change to the plugin, and add it to [`CHANGELOG/CHANGELOG_PLUGIN.md`](../CHANGELOG/CHANGELOG_PLUGIN.md). No release is needed; the marketplace reads `main`.
 
@@ -156,7 +159,7 @@ Whether a plugin and an app work together depends only on the protocol version (
 
 ## Releasing
 
-Both apps are published on this repository's GitHub Releases.
+Both apps are published on this repository's GitHub Releases. Before a release, run `tools/check-claude-code.py` with the Claude Code users have now.
 
 **macOS** (signed with a Developer ID and notarized by Apple; the one-time setup of the certificate and the notarization login is in [releasing.md](releasing.md)):
 

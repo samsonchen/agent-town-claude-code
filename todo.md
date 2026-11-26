@@ -224,6 +224,12 @@ After a Windows restart, a session that started and ended (`/exit`) left a block
 - [x] **Windows app 1.0.15:** `TownEvent.from_json` (`app/windows/core/town_event.gd`) skips an event whose `sessionId` or `projectId` is empty; test in `test_batches_skip_bad_events`.
 - [x] **Mac (1.0.24):** `TownEvent.init(from:)` (`app/macos/Sources/TownCore/Events.swift`) throws when `sessionId` or `projectId` is empty, so `Batch.decode` skips the event; test `batchesSkipEventsWithEmptyIds` in `BuildingTests.swift`.
 
+### A check of town-link against the real Claude Code (2026-11-26)
+
+`tools/check-claude-code.py` runs one short `claude -p` session with the checkout's town-link and a test Stop hook, and checks what town-link relies on in Claude Code (the "Stop hook feedback:" note; no skipped-hook notices). Part of the checks for every change, app or plugin (`CLAUDE.md` → Checks). Checked on the Mac: 6 of 6 with town-link 1.0.7; with 1.0.6 (`--plugin`) it fails the Stop and notice checks, as it should.
+
+- [ ] Windows: run `python tools\check-claude-code.py` once and see 6 of 6. There `APPDATA` is a real folder and the endpoint file goes in `<temp>\appdata\agent-town-claude-code\`; Claude Code is found as `claude.cmd` or `claude.exe` on PATH.
+
 ### Windows app: time asleep doesn't close sessions (found 2026-11-26; macOS app 1.0.25)
 
 On the Mac, a background shell (a long render) lost its operator after the computer slept: the app closes a session it hasn't heard from for 2 minutes, and after waking its first check counted the time asleep. town-link's heartbeat then brought the Chief of Staff back, but not the operator (it re-sends open work only when it reconnects). Fix: a gap of more than 10 s between two ticks of the store's 0.1 s timer means the app was suspended; every session's last-event time moves forward by the gap (`Building.paused(forMs:)`) before that tick's expiry check. Mac code: `TownStore.tick` in `app/macos/Sources/AgentTown/TownStore.swift`, `Building.paused` in `Sources/TownCore/Building.swift`; test `timeAsleepDoesNotMakeSessionsStale` in `BuildingTests.swift`. Spec: `docs/architecture.md` → Stale sessions.

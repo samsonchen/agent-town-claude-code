@@ -12,7 +12,7 @@ The Windows app has its own version number, `config/version` in `app/windows/pro
 
 1. Raise the version in two places, to the same number: `config/version` in `app/windows/project.godot`, and `application/file_version` and `application/product_version` in `app/windows/export_presets.cfg` (with a fourth part, `.0`: `1.0.1.0`). `release.ps1` stops if they differ.
 2. Add the version to [`CHANGELOG/CHANGELOG_WINDOWS.md`](../../CHANGELOG/CHANGELOG_WINDOWS.md), at the top: what a user would notice, fixes included. `git log windows-v<previous>..HEAD -- app/windows` lists the changes since the last release.
-3. Build and try it:
+3. Check town-link with the Claude Code installed here (`python tools\check-claude-code.py`, a few seconds; see [development.md](../development.md#the-plugin)), then build and try it:
    ```powershell
    .\app\windows\scripts\release.ps1
    ```

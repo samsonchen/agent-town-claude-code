@@ -96,6 +96,8 @@ open AgentTown-<version>.dmg
 
 ## Part F: Publish
 
+First check town-link with the Claude Code users have now: `python3 tools/check-claude-code.py` (a few seconds; see [development.md](development.md#the-plugin)).
+
 ```
 app/macos/scripts/release.sh --publish
 ```

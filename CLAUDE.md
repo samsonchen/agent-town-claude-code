@@ -13,6 +13,7 @@ A macOS menu bar app (Swift, RealityKit) that draws Claude Code's work as a smal
 
 ## Checks
 
+- With every change, to the plugin or to an app: `python3 tools/check-claude-code.py` (`python` on Windows). It runs one short real `claude -p` session with this checkout's town-link and a test Stop hook (one small Haiku request, a few seconds; it leaves a running app alone) and checks what Claude Code does that town-link relies on: the Stop hook's note, and no skipped-hook notices. Run it too after Claude Code updates itself. A FAIL there usually means Claude Code changed: fix town-link, not the check.
 - Plugin: `claude plugin validate plugin` and `claude plugin test plugin`.
 - App: `swift build` and `swift test` in `app/macos`.
 - Windows app: `godot --headless --path app/windows --script res://tests/run_tests.gd` (Godot 4.7.2: set `GODOT` to its console build unless `godot` is on `PATH`). When the macOS building state changes and `protocol/fixtures/expected/` is regenerated, the Windows port must change to match.
