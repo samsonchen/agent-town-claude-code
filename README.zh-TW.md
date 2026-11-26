@@ -56,7 +56,6 @@ agent-town 包含一個 Claude Code plugin（town-link）和一個 macOS、Windo
 
 - 它不是衡量生產力的儀表板。它顯示正在發生什麼，不評斷做得好不好。
 - 它不控制 Claude Code。你一樣在終端機或 Claude 桌面 app 裡工作，agent-town 只負責看。
-- 它還沒做完。請看[已知問題](docs/known-issues.md)和 [roadmap](docs/roadmap.md)（英文）。
 
 ## 2. 安裝
 

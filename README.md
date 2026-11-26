@@ -56,7 +56,6 @@ Nothing leaves your computer except a few short requests per task: town-link ask
 
 - It is not a dashboard for measuring productivity. It shows what is happening, not how well.
 - It does not control Claude Code. You still work in the terminal or the Claude desktop app; agent-town only watches.
-- It is not finished. See [Known issues](docs/known-issues.md) and the [roadmap](docs/roadmap.md).
 
 ## 2. Installing
 
