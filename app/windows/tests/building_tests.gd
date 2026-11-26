@@ -208,6 +208,8 @@ func test_batches_skip_bad_events() -> void:
 		check(batch["protocol"] == 1, "protocol")
 		check((batch["events"] as Array).size() == 1, "the bad event is skipped")
 	check(TownEvent.decode_batch("not json") == null, "not a batch")
+	var empty: Variant = TownEvent.decode_batch('{"protocol":1,"events":[{"type":"context.update","sessionId":"s","seq":1,"ts":5,"projectId":""},{"type":"heartbeat","sessionId":"","seq":2,"ts":5,"projectId":"p"}]}')
+	check(empty != null and (empty["events"] as Array).is_empty(), "events with an empty sessionId or projectId are skipped")
 
 
 static func _chief(b: Building) -> Building.Chief:

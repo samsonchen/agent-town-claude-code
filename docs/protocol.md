@@ -65,6 +65,8 @@ Every event has these fields:
 | `ts` | integer | Sender clock, Unix milliseconds |
 | `projectId` | string | Hash of the project identity (see [architecture.md](architecture.md)) |
 
+`sessionId` and `projectId` are never empty. A receiver skips an event whose `sessionId` or `projectId` is empty, as it skips one missing a field. The sender holds events raised before it knows both, and sends them after `session.open`.
+
 ## Event types
 
 ### `session.open`

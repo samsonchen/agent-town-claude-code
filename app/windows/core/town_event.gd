@@ -32,6 +32,9 @@ static func from_json(d: Variant) -> TownEvent:
 	for k: String in ["type", "sessionId", "projectId"]:
 		if typeof(all.get(k)) != TYPE_STRING:
 			return null
+	# The schema's minLength: an empty ID would make a nameless block of its own that never closes.
+	if (all["sessionId"] as String).is_empty() or (all["projectId"] as String).is_empty():
+		return null
 	for k: String in ["seq", "ts"]:
 		if not _is_number(all.get(k)):
 			return null

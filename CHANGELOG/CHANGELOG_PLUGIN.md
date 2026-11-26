@@ -2,6 +2,10 @@
 
 What changed in each version of town-link, the Claude Code plugin. There are no releases: a version reaches users when `version` in `plugin/.claude-plugin/plugin.json` is raised on `main`, and they run `claude plugin update town-link@agent-town-claude-code`. `git log -- plugin` lists its commits. The macOS and Windows apps have their own changelogs and version numbers. Whether a town-link and an app work together depends only on the protocol version.
 
+## 1.0.6 (2026-11-26)
+
+- Fixed: a session could leave a second, nameless block in the office that stayed after the session ended (for about two minutes), with its Chief of Staff in it. When starting the session was slow, as right after restarting the computer, its first context report went out before town-link knew the project. Events raised while the session starts now wait and are sent after the session's opening.
+
 ## 1.0.5 (2026-11-13)
 
 - An icon for the plugin, and macOS and Windows named in its description.

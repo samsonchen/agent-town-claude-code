@@ -1,6 +1,6 @@
 {
   "name": "town-link",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Sends what Claude Code does to the agent-town app on macOS and Windows, which shows it as a small office.",
   "author": {
     "name": "Samson Chen"

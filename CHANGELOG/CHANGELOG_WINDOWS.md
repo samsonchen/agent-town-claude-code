@@ -2,6 +2,10 @@
 
 What changed in each release of the Windows app. Each version is tagged `windows-v<version>` in this repository, and `git log windows-v<previous>..windows-v<version>` lists its commits. The macOS app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.15 (2026-11-26)
+
+- Fixed: an event with an empty session or project ID (which an older town-link could send while a session was starting, for example right after a restart) no longer adds a nameless block that stays after the session ends. Update town-link to 1.0.6 too.
+
 ## 1.0.14 (2026-11-26)
 
 - The office window keeps its place and size across upgrades and restarts. Before, they were saved only when you quit from the tray or hid the window, so an upgrade (which closes the app) or a Windows restart lost every move since. Now each move or resize is saved a moment after it.

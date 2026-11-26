@@ -55,6 +55,10 @@ let enabled = true
 let refused = false // the app answered 426
 let endpointPath = ''
 let dirty = false // something changed since the last save
+// False until session.start knows the session and the project. Events raised before then (the
+// context can be measured while finding the repository is slow, right after a reboot) wait in the
+// tracker: sent with an empty projectId, they made a second, nameless block that never closed.
+let ready = false
 
 // A hot reload (an update of this plugin mid-session) starts the module over; the session's
 // state keeps the open ticket and the unsent events, so a report is not lost to it.
@@ -104,6 +108,7 @@ function envelope(ev: Ev): Ev {
 
 /** Move what the tracker emitted into the outbox. */
 function collect() {
+  if (!ready) return
   for (const ev of town.drain()) {
     if (!enabled || refused) continue
     queue.push(envelope(ev))
@@ -264,6 +269,7 @@ const statusText = (v: string, reachable: boolean) =>
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     try {
+      ready = false
       town = new Town(() => crypto.randomUUID())
       seq = 0
       queue = []
@@ -300,6 +306,7 @@ export const register: Register = on => {
       const version = await $.session.version()
       const model = await $.session.model()
       const plugin = await pluginVersion($) // so the app can tell the user about a newer town-link
+      const early = town.drain() // raised while starting: sent after session.open
       town.open({
         projectName: name,
         surface: e.isInteractive === false ? 'headless' : (e.surface ?? 'terminal'),
@@ -307,6 +314,8 @@ export const register: Register = on => {
         ...(model ? { model } : {}),
         ...(plugin ? { pluginVersion: plugin } : {}),
       })
+      town.out.push(...early)
+      ready = true
       // The context window's size before the first response fills it.
       const usage = await $.session.usage().catch(() => undefined)
       safe(() => town.context(usage?.context))

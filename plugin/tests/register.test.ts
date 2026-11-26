@@ -10,14 +10,17 @@ type Posted = { type: string; [k: string]: unknown }
 /** A command typed by the user at a terminal, as the engine stamps it. */
 const typed = { origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } }
 
-function world(on: any) {
+function world(on: any, repoFound: Promise<void> = Promise.resolve()) {
   const clock = mock.clock(on, { now: 1_000_000 })
   mock.store(on)
   const posted: Posted[] = []
   on('session.id', () => ({ value: 'session-1' }))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   on('env.get', (_: any, e: any) => ({ value: e.name === 'HOME' ? '/home/test' : undefined }))
-  on('session.repo', () => ({ value: { root: '/work/town', remote: 'github.com/example/town' } }))
+  on('session.repo', async () => {
+    await repoFound
+    return { value: { root: '/work/town', remote: 'github.com/example/town' } }
+  })
   on('session.root', () => ({ value: '/work/town' }))
   on('settings.read', () => ({ value: {} }))
   on('session.version', () => ({ value: { version: '2.1.319' } }))
@@ -108,5 +111,26 @@ describe('/town', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = (await $.command.run({ command: 'town', args: '', ...typed })) as any
     expect(String(result.text).split('\n')[0]).toBe('Version 9.8.7.')
+  })
+})
+
+describe('session start', () => {
+  test('an event raised while the session is still starting carries its project and session', async ($, on) => {
+    // Right after a reboot, finding the repository can take a while; the context is measured meanwhile.
+    let release: () => void = () => {}
+    const { clock, posted } = world(on, new Promise<void>(r => (release = r)))
+
+    const started = $.session.start({ cwd: '/work/town', surface: 'terminal', isInteractive: true })
+    await clock.advance(10)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ($.session as any).measure({ changed: ['context'], context: { window: 1_000_000, used: 20_000 } }).catch(() => undefined)
+    release()
+    await started
+    await clock.advance(1_000)
+
+    const open = posted[0]
+    expect(open?.type).toBe('session.open')
+    expect(open?.projectId).toMatch(/^[0-9a-f]{16}$/)
+    expect(posted.map(ev => [ev.type, ev.sessionId, ev.projectId]).filter(([, s, p]) => s !== 'session-1' || p !== open?.projectId)).toEqual([])
   })
 })
