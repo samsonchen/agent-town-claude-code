@@ -165,6 +165,13 @@ func replay(_ name: String, sound: SoundSettings = SoundSettings()) throws -> (B
     #expect(b.blockOrder.isEmpty)
 }
 
+@Test func batchesSkipEventsWithEmptyIds() throws {
+    let batch = try Batch.decode(Data("""
+    {"protocol":1,"events":[{"type":"context.update","sessionId":"s","seq":1,"ts":5,"projectId":""},{"type":"heartbeat","sessionId":"","seq":2,"ts":5,"projectId":"p"},{"type":"heartbeat","sessionId":"s","seq":3,"ts":5,"projectId":"p"}]}
+    """.utf8))
+    #expect(batch.events.map(\.seq) == [3])
+}
+
 @Test func autoModeApprovalIsMarked() {
     var b = Building()
     func ev(_ type: String, _ seq: Int, _ f: [String: JSONValue]) -> TownEvent {

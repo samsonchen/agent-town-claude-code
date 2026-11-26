@@ -2,6 +2,10 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.24 (2026-11-26)
+
+- Fixed: an event with an empty session or project ID (which an older town-link could send while a session was starting, for example right after a restart) no longer adds a nameless block that stays after the session ends. Update town-link to 1.0.6 too.
+
 ## 1.0.23 (2026-11-26)
 
 - The office window keeps its place on a second display across restarts. Before, if that display was not ready yet when agent-town opened at login, the window opened somewhere else and its saved place was lost; now the window moves back when the display connects, unless you have moved it yourself in the meantime.

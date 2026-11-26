@@ -57,6 +57,10 @@ public struct TownEvent: Decodable, Equatable, Sendable {
         seq = Int(try num("seq"))
         ts = Int64(try num("ts"))
         projectId = try str("projectId")
+        // The schema's minLength: an empty ID would make a nameless block of its own that never closes.
+        if sessionId.isEmpty || projectId.isEmpty {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "empty sessionId or projectId"))
+        }
         fields = all.filter { !Self.envelopeKeys.contains($0.key) }
     }
 
