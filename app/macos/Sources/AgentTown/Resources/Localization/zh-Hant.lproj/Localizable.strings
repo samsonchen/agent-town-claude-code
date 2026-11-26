@@ -58,6 +58,10 @@
 "(%lld sessions)" = "（%lld 個 session）";
 "Then restart those Claude Code sessions: a session keeps the town-link it started with." = "接著重新啟動這些 Claude Code session：session 會沿用它啟動時的 town-link。";
 "town-link %@ is the newest. No open session uses an older one." = "town-link 最新版本是 %@，沒有開啟中的 session 使用舊版。";
+"town-link %@ is installed." = "已安裝 town-link %@。";
+"Restart them: a session keeps the town-link it started with." = "請重新啟動這些 session：session 會沿用它啟動時的 town-link。";
+"Claude Code sessions started after that use it." = "之後啟動的 Claude Code session 就會使用新版。";
+"Restart sessions for town-link %@…" = "重新啟動 session 以使用 town-link %@…";
 "Copy" = "拷貝";
 "Copied" = "已拷貝";
 "Close" = "關閉";

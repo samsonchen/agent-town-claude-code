@@ -33,6 +33,23 @@ import Testing
         #expect(w.download == nil)
     }
 
+    @Test func installedVersionIsTheUserScopeEntry() {
+        let json = """
+        {"version":2,"plugins":{
+          "other@market":[{"scope":"user","version":"9.9.9"}],
+          "town-link@agent-town-claude-code":[
+            {"scope":"project","projectPath":"/x","version":"1.0.1"},
+            {"scope":"user","installPath":"/p/1.0.7","version":"1.0.7","gitCommitSha":"abc"}
+          ]}}
+        """
+        #expect(UpdateFeed.installedPluginVersion(fromInstalledPlugins: Data(json.utf8)) == "1.0.7")
+        let projectOnly = #"{"plugins":{"town-link@agent-town-claude-code":[{"scope":"project","version":"1.0.1"}]}}"#
+        #expect(UpdateFeed.installedPluginVersion(fromInstalledPlugins: Data(projectOnly.utf8)) == nil)
+        #expect(UpdateFeed.installedPluginVersion(fromInstalledPlugins: Data(#"{"plugins":{}}"#.utf8)) == nil)
+        #expect(UpdateFeed.installedPluginVersion(fromInstalledPlugins: Data(#"{"plugins":{"town-link@agent-town-claude-code":{"version":"1.0.7"}}}"#.utf8)) == nil)
+        #expect(UpdateFeed.installedPluginVersion(fromInstalledPlugins: Data("not json".utf8)) == nil)
+    }
+
     @Test func badAnswersGiveNothing() {
         #expect(UpdateFeed.newest(fromReleases: Data("{\"message\":\"rate limited\"}".utf8), tagPrefix: "v", downloadSuffix: ".dmg") == nil)
         #expect(UpdateFeed.pluginVersion(fromManifest: Data("{\"version\":\"1.0.3\"}".utf8)) == "1.0.3")

@@ -45,4 +45,4 @@ To see every event town-link handles and every call it makes, run `claude plugin
 
 ## The app
 
-The app receives the events and draws them. It sends nothing anywhere, except its update check: once a day (Settings → Updates, on by default), it reads the list of releases and town-link's version from GitHub's public addresses, with nothing about you in the request.
+The app receives the events and draws them. It sends nothing anywhere, except its update check: once a day (Settings → Updates, on by default), it reads the list of releases and town-link's version from GitHub's public addresses, with nothing about you in the request. To tell whether town-link needs updating, it also reads the version of town-link that Claude Code has installed, from Claude Code's `plugins/installed_plugins.json` on your computer; that stays on your computer.

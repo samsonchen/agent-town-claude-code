@@ -12,6 +12,8 @@ import TownCore
     @Published private(set) var newestApp: ReleaseInfo?
     /// town-link's version on `main`, once a check has read it.
     @Published private(set) var newestPlugin: String?
+    /// The town-link Claude Code has installed, which new sessions start with; nil when unknown.
+    @Published private(set) var installedPlugin: String?
     /// Open sessions whose town-link is older than `newestPlugin`.
     @Published private(set) var outdatedSessions: [OutdatedSession] = []
     @Published private(set) var checking = false
@@ -33,7 +35,19 @@ import TownCore
         return r
     }
 
-    var pluginUpdate: String? { outdatedSessions.isEmpty ? nil : newestPlugin }
+    /// The installed town-link is older than the one on `main`: the plugin commands are needed.
+    var installedOutdated: Bool {
+        guard let newest = newestPlugin, let installed = installedPlugin else { return false }
+        return UpdateFeed.isOlder(installed, than: newest)
+    }
+
+    /// The installed copy is up to date, and only open sessions still run an older one: they need
+    /// a restart, not the plugin commands.
+    var onlyRestartNeeded: Bool { installedPlugin != nil && !installedOutdated && !outdatedSessions.isEmpty }
+
+    /// town-link's newest version while the installed copy or an open session is older. Closing the
+    /// sessions to update keeps it: the installed copy is still older (spec: Updates).
+    var pluginUpdate: String? { outdatedSessions.isEmpty && !installedOutdated ? nil : newestPlugin }
 
     var hasUpdate: Bool { appUpdate != nil || pluginUpdate != nil }
 
@@ -50,13 +64,40 @@ import TownCore
     private var store: TownStore?
     private var watch: AnyCancellable?
     private var timer: Timer?
+    private var installedTimer: Timer?
+
+    /// Claude Code's record of its installed plugins (`CLAUDE_CONFIG_DIR` when set, else `~/.claude`).
+    static var installedPluginsFile: URL {
+        let dir = ProcessInfo.processInfo.environment["CLAUDE_CONFIG_DIR"].map { URL(fileURLWithPath: $0) }
+            ?? FileManager.default.homeDirectoryForCurrentUser.appending(path: ".claude")
+        return dir.appending(path: "plugins/installed_plugins.json")
+    }
+
+    /// Reads the installed town-link's version. Cheap (a small local file): read at each check,
+    /// when sessions come and go, and every 10 seconds while the installed copy is older, so the
+    /// notice goes soon after `claude plugin update`.
+    func readInstalled() {
+        let v = (try? Data(contentsOf: Self.installedPluginsFile)).flatMap(UpdateFeed.installedPluginVersion(fromInstalledPlugins:))
+        if v != installedPlugin { installedPlugin = v }
+        if installedOutdated, installedTimer == nil {
+            installedTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+                Task { @MainActor in Updater.shared.readInstalled() }
+            }
+        } else if !installedOutdated, let t = installedTimer {
+            t.invalidate()
+            installedTimer = nil
+        }
+    }
 
     /// Starts watching the sessions' versions and, unless `automatic` is false, checks shortly
     /// after launch and then once a day while Check for updates automatically is on.
     func start(store: TownStore, automatic: Bool) {
         self.store = store
         watch = store.$pluginVersions.sink { [weak self] versions in
-            Task { @MainActor in self?.refreshSessions(versions) }
+            Task { @MainActor in
+                self?.refreshSessions(versions)
+                self?.readInstalled()
+            }
         }
         if CommandLine.arguments.contains("--fake-update") {
             // To look at the notices without a release: a made-up newer app and town-link.
@@ -64,6 +105,7 @@ import TownCore
                                     page: AppInfo.repository.appending(path: "releases"), download: nil)
             newestPlugin = "99.0.0"
             refreshSessions(store.pluginVersions)
+            readInstalled()
             return
         }
         if CommandLine.arguments.contains("--check-now") { Task { await check() } } // a real check, also in a demo
@@ -108,6 +150,7 @@ import TownCore
             UserDefaults.standard.set(lastChecked, forKey: Prefs.lastUpdateCheck)
         }
         refreshSessions(store?.pluginVersions ?? [:])
+        readInstalled()
     }
 
     private static func fetch(_ url: URL) async -> Data? {
@@ -233,14 +276,22 @@ struct UpdatesView: View {
 
     @ViewBuilder private var pluginSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let v = updater.pluginUpdate {
+            if let v = updater.pluginUpdate, updater.onlyRestartNeeded {
+                // Updated already; only sessions started before the update are left.
+                Text(String(format: Labels.text("town-link %@ is installed."), updater.installedPlugin ?? v)).bold()
+                sessionList
+                Text(Labels.text("Restart them: a session keeps the town-link it started with."))
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if let v = updater.pluginUpdate {
                 Text(String(format: Labels.text("town-link %@ is available"), v)).bold()
-                Text(Labels.text("These sessions use an older town-link:"))
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(Self.groups(updater.outdatedSessions), id: \.self) { Text("• " + $0) }
+                if let installed = updater.installedPlugin {
+                    Text(String(format: Labels.text("You have %@."), installed)).foregroundStyle(.secondary)
                 }
+                if !updater.outdatedSessions.isEmpty { sessionList }
                 ForEach(Updater.pluginCommands, id: \.self) { CommandRow(command: $0) }
-                Text(Labels.text("Then restart those Claude Code sessions: a session keeps the town-link it started with."))
+                Text(updater.outdatedSessions.isEmpty
+                     ? Labels.text("Claude Code sessions started after that use it.")
+                     : Labels.text("Then restart those Claude Code sessions: a session keeps the town-link it started with."))
                     .fixedSize(horizontal: false, vertical: true)
             } else if let v = updater.newestPlugin {
                 Text(String(format: Labels.text("town-link %@ is the newest. No open session uses an older one."), v))
@@ -248,6 +299,13 @@ struct UpdatesView: View {
             } else {
                 Text(Labels.text("Not checked yet."))
             }
+        }
+    }
+
+    @ViewBuilder private var sessionList: some View {
+        Text(Labels.text("These sessions use an older town-link:"))
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(Self.groups(updater.outdatedSessions), id: \.self) { Text("• " + $0) }
         }
     }
 

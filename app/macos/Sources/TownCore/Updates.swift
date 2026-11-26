@@ -81,6 +81,22 @@ public enum UpdateFeed {
         return v
     }
 
+    /// town-link's ID in Claude Code: the plugin and the marketplace (this repository) it comes from.
+    public static let pluginID = "town-link@agent-town-claude-code"
+
+    /// The town-link version Claude Code has installed for the user (scope `user`), from its
+    /// `plugins/installed_plugins.json`. That file is Claude Code's own and undocumented: nil when
+    /// it reads differently, and the town-link notice then goes by open sessions only (spec: Updates).
+    public static func installedPluginVersion(fromInstalledPlugins data: Data) -> String? {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let plugins = root["plugins"] as? [String: Any],
+              let entries = plugins[pluginID] as? [[String: Any]] else { return nil }
+        for e in entries where e["scope"] as? String == "user" {
+            if let v = e["version"] as? String, VersionNumber(v) != nil { return v }
+        }
+        return nil
+    }
+
     /// Whether `running` is older than `newest`. A running version that isn't a version number
     /// (absent: town-link 1.0.2 or older) counts as older.
     public static func isOlder(_ running: String?, than newest: String) -> Bool {

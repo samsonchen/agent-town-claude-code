@@ -251,7 +251,7 @@ The app tells the user when a newer agent-town or a newer town-link is available
 
 Versions are compared number by number (`1.0.10` is newer than `1.0.9`). A failed check changes nothing and is tried again at the next check.
 
-**town-link's version.** Each session sends its town-link version in `session.open` (`pluginVersion`, since town-link 1.0.3; see [protocol.md](protocol.md)). A session that sends none runs town-link 1.0.2 or older. The town-link notice is shown while at least one open session runs an older town-link than the one on `main`, and goes away once none does. A Claude Code session keeps the town-link it started with, so an updated plugin reaches a session only after that session restarts. Whether the app and town-link work together still depends only on the protocol version (a 426 and a toast, as before); the plugin version only drives this notice.
+**town-link's version.** Each session sends its town-link version in `session.open` (`pluginVersion`, since town-link 1.0.3; see [protocol.md](protocol.md)). A session that sends none runs town-link 1.0.2 or older. The app also reads the version Claude Code has installed, which new sessions start with: the `user`-scope entry for `town-link@agent-town-claude-code` in Claude Code's `plugins/installed_plugins.json` (in `CLAUDE_CONFIG_DIR` when set, else `~/.claude`; on Windows `%USERPROFILE%\.claude`). That file is Claude Code's own and undocumented; when it is missing or reads differently, the installed version is unknown and the notice goes by open sessions only. It is read at each check, when sessions open or close, and every 10 seconds while the installed copy is older, so the notice changes soon after `claude plugin update` (macOS app 1.0.26). The town-link notice is shown while the installed copy or at least one open session runs an older town-link than the one on `main`, and goes away once neither does. So a user who closes their sessions to update still sees the notice and the commands until the update is done. A Claude Code session keeps the town-link it started with, so an updated plugin reaches a session only after that session restarts. Whether the app and town-link work together still depends only on the protocol version (a 426 and a toast, as before); the plugin version only drives this notice.
 
 **Where the user sees it.**
 
@@ -265,12 +265,13 @@ Versions are compared number by number (`1.0.10` is newer than `1.0.9`). A faile
   - Installed with Homebrew (the cask's folder `Caskroom/agent-town` exists under `/opt/homebrew` or `/usr/local`): `brew update && brew upgrade --cask samsonchen/agent-town-claude-code/agent-town`, with a Copy button.
   - Otherwise (from the `.dmg`): a Download button for the release's `.dmg`, and "Quit agent-town, open the downloaded file and drag agent-town to Applications, replacing the old copy."
   - Windows: a Download button for the installer; running it replaces the installed app.
-- town-link: the newest version and the open sessions that run an older one (project name and version, or "1.0.2 or older"), then the commands, each with a Copy button:
+- town-link, while the installed copy is older (or its version is unknown): the newest version, "You have X." (the installed version, when known), the open sessions that run an older one (project name and version, or "1.0.2 or older"; left out when there are none), then the commands, each with a Copy button:
   ```
   claude plugin marketplace update agent-town-claude-code
   claude plugin update town-link@agent-town-claude-code
   ```
-  and "Then restart those Claude Code sessions: a session keeps the town-link it started with."
+  and "Then restart those Claude Code sessions: a session keeps the town-link it started with." (with no older session open: "Claude Code sessions started after that use it.").
+- town-link, once the installed copy is up to date but open sessions still run an older one: "town-link X is installed.", those sessions, and "Restart them: a session keeps the town-link it started with." The menu line then reads "Restart sessions for town-link X…".
 - When the last check ran, and Check now.
 
 When nothing is newer, the window says each is up to date.

@@ -93,7 +93,8 @@ final class MenuBar: NSObject {
             menu.addItem(action(String(format: Labels.text("agent-town %@ is available…"), r.version)) { Updater.shared.showWindow() })
         }
         if let v = updater.pluginUpdate {
-            menu.addItem(action(String(format: Labels.text("town-link %@ is available…"), v)) { Updater.shared.showWindow() })
+            let line = updater.onlyRestartNeeded ? "Restart sessions for town-link %@…" : "town-link %@ is available…"
+            menu.addItem(action(String(format: Labels.text(String.LocalizationValue(line)), v)) { Updater.shared.showWindow() })
         }
         if updater.hasUpdate { menu.addItem(.separator()) }
         menu.addItem(action(Labels.text("About agent-town")) { [weak self] in self?.open("about") })
