@@ -2,6 +2,10 @@
 
 What changed in each release of the Windows app. Each version is tagged `windows-v<version>` in this repository, and `git log windows-v<previous>..windows-v<version>` lists its commits. The macOS app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.17 (2026-11-27)
+
+- Fixed: the town-link update notice no longer disappears when you close your Claude Code sessions to update. It now also checks the town-link Claude Code has installed, so the notice and the update commands stay until you have run them, even with no session open. Once town-link is updated, sessions started before the update are listed with "Restart them" instead.
+
 ## 1.0.16 (2026-11-26)
 
 - Fixed: after the PC slept, the office could lose work still under way, such as an operator running a long background command. Time asleep no longer counts as a session falling silent.

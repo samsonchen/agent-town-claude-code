@@ -77,14 +77,23 @@ func _rebuild() -> void:
 	_box.add_child(HSeparator.new())
 	_heading("town-link")
 	var plugin := updater.plugin_update()
-	if plugin != "":
+	if plugin != "" and updater.only_restart_needed():
+		# Updated already; only sessions started before the update are left.
+		_line(labels.t("town-link %@ is installed.", [updater.installed_plugin]), true)
+		_session_list()
+		_line(labels.t("Restart them: a session keeps the town-link it started with."))
+	elif plugin != "":
 		_line(labels.t("town-link %@ is available", [plugin]), true)
-		_line(labels.t("These sessions use an older town-link:"))
-		for g in _groups():
-			_line("• " + g)
+		if updater.installed_plugin != "":
+			_line(labels.t("You have %@.", [updater.installed_plugin]))
+		if not updater.outdated.is_empty():
+			_session_list()
 		for cmd in Updater.PLUGIN_COMMANDS:
 			_command(cmd)
-		_line(labels.t("Then restart those Claude Code sessions: a session keeps the town-link it started with."))
+		if updater.outdated.is_empty():
+			_line(labels.t("Claude Code sessions started after that use it."))
+		else:
+			_line(labels.t("Then restart those Claude Code sessions: a session keeps the town-link it started with."))
 	elif updater.newest_plugin != "":
 		_line(labels.t("town-link %@ is the newest. No open session uses an older one.", [updater.newest_plugin]))
 	else:
@@ -98,6 +107,12 @@ func _fit() -> void:
 	size = Vector2i(_margin.get_combined_minimum_size())
 	if visible:
 		position = center - size / 2
+
+
+func _session_list() -> void:
+	_line(labels.t("These sessions use an older town-link:"))
+	for g in _groups():
+		_line("• " + g)
 
 
 ## One line per project and version: "agent-town: 1.0.2 or older (2 sessions)".

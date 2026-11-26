@@ -23,7 +23,10 @@ var newest_app: Variant = null ## the newest Windows release (UpdateFeed.newest_
 var newest_plugin := "" ## town-link's version on main, once a check read it
 var app_checked := false ## a check has read the releases (there may be no Windows release yet)
 var outdated: Array[Dictionary] = [] ## {"id", "project", "version"}: open sessions with an older town-link
+## The town-link Claude Code has installed, which new sessions start with; "" when unknown.
+var installed_plugin := ""
 var checking := false
+var _installed_timer: Timer
 var last_check_failed := false
 ## A Microsoft Store copy: no check for a newer app, and app_update() is always null.
 var store_build := Distribution.is_store()
@@ -39,13 +42,16 @@ func _init(p_settings: TownSettings, p_store: TownStore, p_version: String) -> v
 ## after 1, 2, 5 and 10 minutes while it fails) and then once a day while Check for updates automatically is on. `fake` makes up a newer app and town-link
 ## (99.0.0) without the network, to look at the notices; `check_now` checks at once, even in a demo.
 func start(automatic: bool, fake: bool, check_now: bool) -> void:
-	store.plugin_versions_changed.connect(_refresh_sessions)
+	store.plugin_versions_changed.connect(func() -> void:
+		_refresh_sessions()
+		read_installed())
 	if fake:
 		newest_app = {"version": "99.0.0", "tag": "windows-v99.0.0", "notes": "Made-up release notes, for --fake-update.",
 			"page": AboutWindow.REPOSITORY + "/releases", "download": ""}
 		newest_plugin = "99.0.0"
 		app_checked = true
 		_refresh_sessions()
+		read_installed()
 		return
 	if check_now:
 		check()
@@ -88,9 +94,53 @@ func app_update() -> Variant:
 	return newest_app
 
 
-## town-link's newest version while an open session runs an older one, else "".
+## The installed town-link is older than the one on `main`: the plugin commands are needed.
+func installed_outdated() -> bool:
+	return newest_plugin != "" and installed_plugin != "" and UpdateFeed.is_older(installed_plugin, newest_plugin)
+
+
+## The installed copy is up to date, and only open sessions still run an older one: they need a
+## restart, not the plugin commands.
+func only_restart_needed() -> bool:
+	return installed_plugin != "" and not installed_outdated() and not outdated.is_empty()
+
+
+## town-link's newest version while the installed copy or an open session is older, else "".
+## Closing the sessions to update keeps it: the installed copy is still older (spec: Updates).
 func plugin_update() -> String:
-	return "" if outdated.is_empty() else newest_plugin
+	return "" if outdated.is_empty() and not installed_outdated() else newest_plugin
+
+
+## Claude Code's record of its installed plugins (`CLAUDE_CONFIG_DIR` when set, else
+## `%USERPROFILE%\.claude`).
+static func installed_plugins_file() -> String:
+	var dir := OS.get_environment("CLAUDE_CONFIG_DIR")
+	if dir == "":
+		var home := OS.get_environment("USERPROFILE")
+		if home == "":
+			home = OS.get_environment("HOME")
+		dir = home.path_join(".claude")
+	return dir.path_join("plugins").path_join("installed_plugins.json")
+
+
+## Reads the installed town-link's version. Cheap (a small local file): read at each check, when
+## sessions come and go, and every 10 seconds while the installed copy is older, so the notice
+## goes soon after `claude plugin update`.
+func read_installed() -> void:
+	var path := installed_plugins_file()
+	var v := UpdateFeed.installed_plugin_version(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else ""
+	if v != installed_plugin:
+		installed_plugin = v
+		changed.emit()
+	if installed_outdated() and _installed_timer == null:
+		_installed_timer = Timer.new()
+		_installed_timer.wait_time = 10.0
+		_installed_timer.autostart = true
+		_installed_timer.timeout.connect(read_installed)
+		add_child(_installed_timer)
+	elif not installed_outdated() and _installed_timer != null:
+		_installed_timer.queue_free()
+		_installed_timer = null
 
 
 func has_update() -> bool:
@@ -127,6 +177,7 @@ func check() -> void:
 		settings.save()
 	checking = false
 	_refresh_sessions()
+	read_installed()
 	changed.emit()
 
 

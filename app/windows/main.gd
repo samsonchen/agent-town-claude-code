@@ -376,7 +376,8 @@ func _fill_menu() -> void:
 	if app != null:
 		_menu.add_item(labels.t("agent-town %@ is available…", [app["version"]]), Menu.APP_UPDATE)
 	if plugin != "":
-		_menu.add_item(labels.t("town-link %@ is available…", [plugin]), Menu.PLUGIN_UPDATE)
+		var line := "Restart sessions for town-link %@…" if updater.only_restart_needed() else "town-link %@ is available…"
+		_menu.add_item(labels.t(line, [plugin]), Menu.PLUGIN_UPDATE)
 	if app != null or plugin != "":
 		_menu.add_separator()
 	_menu.add_item(labels.t("About agent-town"), Menu.ABOUT)

@@ -35,6 +35,20 @@ func test_bad_answers_give_nothing() -> void:
 	check_eq(UpdateFeed.newest_release("[]"), null, "no Windows release yet")
 
 
+func test_installed_version_is_the_user_scope_entry() -> void:
+	var json := """{"version":2,"plugins":{
+	  "other@market":[{"scope":"user","version":"9.9.9"}],
+	  "town-link@agent-town-claude-code":[
+	    {"scope":"project","projectPath":"/x","version":"1.0.1"},
+	    {"scope":"user","installPath":"/p/1.0.7","version":"1.0.7","gitCommitSha":"abc"}
+	  ]}}"""
+	check_eq(UpdateFeed.installed_plugin_version(json), "1.0.7", "the user entry")
+	check_eq(UpdateFeed.installed_plugin_version("{\"plugins\":{\"town-link@agent-town-claude-code\":[{\"scope\":\"project\",\"version\":\"1.0.1\"}]}}"), "", "project only")
+	check_eq(UpdateFeed.installed_plugin_version("{\"plugins\":{}}"), "", "not installed")
+	check_eq(UpdateFeed.installed_plugin_version("{\"plugins\":{\"town-link@agent-town-claude-code\":{\"version\":\"1.0.7\"}}}"), "", "other shape")
+	check_eq(UpdateFeed.installed_plugin_version("not json"), "", "not json")
+
+
 func test_a_session_without_a_version_is_older() -> void:
 	check_eq(UpdateFeed.is_older("", "1.0.3"), true, "no version")
 	check_eq(UpdateFeed.is_older("1.0.2", "1.0.3"), true, "older")

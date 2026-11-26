@@ -87,6 +87,32 @@ static func plugin_version(json_text: String) -> String:
 	return v if typeof(v) == TYPE_STRING and parse_version(v) != null else ""
 
 
+## town-link's ID in Claude Code: the plugin and the marketplace (this repository) it comes from.
+const PLUGIN_ID := "town-link@agent-town-claude-code"
+
+
+## The town-link version Claude Code has installed for the user (scope `user`), from its
+## `plugins/installed_plugins.json`. That file is Claude Code's own and undocumented: "" when it
+## reads differently, and the town-link notice then goes by open sessions only (spec: Updates).
+static func installed_plugin_version(json_text: String) -> String:
+	var j := JSON.new()
+	if j.parse(json_text) != OK or typeof(j.data) != TYPE_DICTIONARY:
+		return ""
+	var plugins: Variant = (j.data as Dictionary).get("plugins")
+	if typeof(plugins) != TYPE_DICTIONARY:
+		return ""
+	var entries: Variant = (plugins as Dictionary).get(PLUGIN_ID)
+	if typeof(entries) != TYPE_ARRAY:
+		return ""
+	for e: Variant in entries:
+		if typeof(e) != TYPE_DICTIONARY or (e as Dictionary).get("scope") != "user":
+			continue
+		var v: Variant = (e as Dictionary).get("version")
+		if typeof(v) == TYPE_STRING and parse_version(v) != null:
+			return v
+	return ""
+
+
 ## Whether `running` is older than `newest`. A running version that isn't a version number ("":
 ## town-link 1.0.2 or older) counts as older.
 static func is_older(running: String, newest: String) -> bool:
