@@ -403,6 +403,17 @@ func _close_session(p: String, s: String) -> Array[Dictionary]:
 	return out
 
 
+## The app was suspended for `ms` (the computer slept): every session's last event moves forward
+## by that much, so time asleep never counts toward `expire_stale`. Sessions paused with the
+## computer; their heartbeats resume after it wakes.
+func paused(ms: int) -> void:
+	if ms <= 0:
+		return
+	for p: String in blocks:
+		for s: String in (blocks[p] as Block).chiefs:
+			((blocks[p] as Block).chiefs[s] as Chief).last_event_ts += ms
+
+
 ## Closes sessions with no event for `stale_after_ms` (spec scene 10; architecture: stale sessions).
 func expire_stale(now_ms: int, stale_after_ms: int = 120_000) -> Array[Dictionary]:
 	var stale: Array[Array] = []

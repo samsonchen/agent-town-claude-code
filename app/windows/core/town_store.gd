@@ -10,6 +10,8 @@ signal changed(change: Dictionary)
 signal plugin_versions_changed ## a session opened with its town-link version, or closed
 
 const STALE_CHECK_MS := 5000
+## A gap this long between two steps (one a frame) means the app was suspended.
+const SUSPENDED_AFTER_MS := 10_000
 
 var building := Building.new()
 var server := LoopbackServer.new()
@@ -20,6 +22,7 @@ var plugin_versions: Dictionary = {}
 
 var _sequencer := Sequencer.new()
 var _last_expiry_ms := 0
+var _last_tick_ms := -1
 var _log_path := OS.get_environment("TOWN_LOG")
 
 
@@ -44,6 +47,14 @@ func _process(_delta: float) -> void:
 ## One step: take new batches, release events that waited long enough, expire stale sessions.
 ## Public so tests can drive it with their own clock.
 func tick(now_ms: int) -> void:
+	# The computer slept (or the app was otherwise suspended): that time is not a session's
+	# silence, so it never makes one stale. Checked before anything else this step. The gap is
+	# measured on the same clock as the sessions' last-event times.
+	if _last_tick_ms >= 0 and now_ms - _last_tick_ms > SUSPENDED_AFTER_MS:
+		var gap := now_ms - _last_tick_ms
+		_log("suspended for %d s: sessions' silence clocks moved forward" % (gap / 1000))
+		building.paused(gap)
+	_last_tick_ms = now_ms
 	for batch: Dictionary in server.poll(now_ms):
 		receive(batch, now_ms)
 	_apply(_sequencer.flush(now_ms), now_ms)

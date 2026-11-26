@@ -129,3 +129,22 @@ func test_store_applies_batches_in_order() -> void:
 	check_eq(seen, ["blockAdded", "chiefArrived", "ticketSubmitted"], "in seq order")
 	check(store.last_event_ms == 1010, "last event time")
 	store.free()
+
+
+func test_store_does_not_count_time_asleep() -> void:
+	var store := TownStore.new()
+	var seen: Array[String] = []
+	store.changed.connect(func(c: Dictionary) -> void: seen.append(c["kind"]))
+	var open := TownEvent.make("session.open", "s", 1, 1, "p", {"projectName": "demo"})
+	store.receive({"protocol": 1, "events": [open] as Array[TownEvent]}, 1000)
+	store.tick(1100)
+	# Ten minutes with no step: the app was suspended, so the session is not stale on waking.
+	store.tick(601_100)
+	check(not seen.has("chiefLeft"), "kept after a suspension")
+	# Steps every few seconds while awake: silence past two minutes still closes it.
+	var t := 601_100
+	while t < 601_100 + 130_000:
+		t += 5_001
+		store.tick(t)
+	check(seen.has("chiefLeft"), "closed after silence while awake")
+	store.free()

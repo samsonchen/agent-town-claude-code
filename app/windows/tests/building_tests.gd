@@ -121,6 +121,18 @@ func test_stale_uses_arrival_time_not_sender_clock() -> void:
 	check(b.expire_stale(10_060_000).is_empty(), "arrival time counts")
 
 
+func test_time_asleep_does_not_make_sessions_stale() -> void:
+	var b := Building.new()
+	b.apply(TestSupport.ev("task.start", 1, {"taskId": "b1", "kind": "shell", "description": "render"}, 1000))
+	# The computer slept for ten minutes: the first check after waking keeps the session.
+	b.paused(600_000)
+	check(b.expire_stale(610_000).is_empty(), "time asleep doesn't count")
+	check(_chief(b).operators.has("b1"), "operator kept")
+	# Silence while awake still counts.
+	check_eq(b.expire_stale(730_000), [{"kind": "chiefLeft", "projectId": "p", "sessionId": "s"},
+		{"kind": "blockRemoved", "projectId": "p"}], "silence while awake counts")
+
+
 func test_sequencer_reorders() -> void:
 	var q := Sequencer.new(500)
 	var seqs := func(events: Array[TownEvent]) -> Array: return events.map(func(e: TownEvent) -> int: return e.seq)
