@@ -12,13 +12,14 @@ Open items as of 2026-11-11, for the next session to pick up. Everything listed 
 
 ## 1. Check on a personal (non-Team) account
 
-On a Team account whose organization ([organization]) manages Claude Code's settings, as the maintainer's work account does, In that case, every `classic.*` hook and `session.compact` skip plugins the user installed. `/plugin` → Errors lists them. The built-in guard `cc-plugin-sec-default` loads only with managed settings or a Team or Enterprise login, so a personal account should get every event.
+On a Team account whose organization ([organization]) manages Claude Code's settings, as the maintainer's work account does, every `classic.*` hook and `session.compact` skip plugins the user installed, each time with a notice in the session. `/plugin` → Errors lists them. Since town-link 1.0.7 it registers no `classic.*` hook (the Stop hook's return comes from its note row, auto mode from `tool.judge`), so only an automatic compaction is lost there, with a notice (decided 2026-11-26: keep `session.compact` for personal accounts). The built-in guard `cc-plugin-sec-default` loads only with managed settings or a Team or Enterprise login, so a personal account should get every event.
 
 Check these on the personal account:
 
 - [x] `/plugin` → Errors shows nothing for town-link (checked 2026-11-11 on the personal account).
 - [ ] Automatic compaction shows the notes scene (`session.compact` with trigger `auto`). Low priority: the user is not worried about it; check it if it comes up.
-- [x] The Inspector's "Returned" scene works on the personal account (checked 2026-11-11 with a test Stop hook). `classic.Stop` runs there; town-link read the hook's reason from the wrong field, fixed in 0.2.3 (the reason is `block`'s text).
+- [x] The Inspector's "Returned" scene works on the personal account (checked 2026-11-11 with a test Stop hook). Since town-link 1.0.7 it comes from the `Stop hook feedback:` note row, checked 2026-11-26 on the organization account; to check once more on the personal account.
+- [ ] The approval sound in auto mode on the personal account after town-link 1.0.7: a classifier answer stays quiet (`tool.judge`), a manual-mode wait still plays it.
 - [x] The permission mode follows Shift+Tab (checked 2026-11-11): in manual mode a slow approval shows the wait and plays the sound; in auto mode the classifier's quick answers show nothing. A classifier answer slower than 5 seconds can't be forced, so that case is untested.
 - [x] The README's known issues say these happen only where an organization manages Claude Code, and `docs/verification.md` item 15 names that cause.
 

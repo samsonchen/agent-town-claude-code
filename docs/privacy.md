@@ -37,7 +37,8 @@ The answers are only labels for the office. If a request fails, the office falls
 | `session.send`, `session.receive` | Notices messages between agents and finished background tasks |
 | `session.compact`, `command.run` (`/compact`) | Shows the compaction scene |
 | `session.measure` | Reads how full the context window is |
-| `classic.PreToolUse`, `classic.Stop` | Reads the permission mode, and a hook's reason when it sends Claude Code back to work |
+| `tool.judge` | Notes that auto mode's classifier, not you, is answering a permission ask, and whether it gave a verdict |
+| `session.append` (note rows only) | Reads a Stop hook's reason when it sends Claude Code back to work |
 | `command.run` (`/town`) | Shows town-link's status, or turns sending on or off |
 
 To see every event town-link handles and every call it makes, run `claude plugin validate plugin` in a clone of this repository.

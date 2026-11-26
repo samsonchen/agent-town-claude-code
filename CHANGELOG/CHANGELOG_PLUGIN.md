@@ -2,6 +2,12 @@
 
 What changed in each version of town-link, the Claude Code plugin. There are no releases: a version reaches users when `version` in `plugin/.claude-plugin/plugin.json` is raised on `main`, and they run `claude plugin update town-link@agent-town-claude-code`. `git log -- plugin` lists its commits. The macOS and Windows apps have their own changelogs and version numbers. Whether a town-link and an app work together depends only on the protocol version.
 
+## 1.0.7 (2026-11-26)
+
+- Where an organization manages Claude Code (a Team or Enterprise login), Claude Code no longer shows lines such as "town-link: its classic.Stop hook was skipped" during your sessions. town-link no longer uses the hooks Claude Code holds back there. The only one left shows up only when Claude Code compacts the conversation, and does no harm.
+- Fixed: the Inspector's "Returned" scene, for when a hook sends Claude Code back to work, now shows on every account, with the hook's reason.
+- The approval sound in auto mode now follows whether auto mode's classifier is answering the ask, not only the mode: it stays quiet on organization accounts too, and plays when the classifier hands the ask to you.
+
 ## 1.0.6 (2026-11-26)
 
 - Fixed: a session could leave a second, nameless block in the office that stayed after the session ended (for about two minutes), with its Chief of Staff in it. When starting the session was slow, as right after restarting the computer, its first context report went out before town-link knew the project. Events raised while the session starts now wait and are sent after the session's opening.

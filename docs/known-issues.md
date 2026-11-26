@@ -2,10 +2,7 @@
 
 ## Known issues and limitations
 
-- **Where your organization manages Claude Code, some scenes may not show.** On a Team or Enterprise login, Claude Code passes some events over the plugins you install yourself, and town-link is one of them. You can see this in `/plugin` → Errors. On a personal account these scenes work.
-  - Automatic compaction: when Claude Code compacts the conversation on its own because the context is full, the office shows nothing. Typing `/compact` yourself always shows the scene.
-  - Returned work: the Inspector's scene may not appear when a hook sends Claude Code back to work. The work itself goes on as usual.
-  - The approval sound in auto mode: agent-town normally stays quiet when auto mode's classifier answers an ask. Under an organization it knows your permission mode only from your settings when a session starts, so if you switch to auto mode with Shift+Tab, a slow ask may still play the approval sound.
+- **Where your organization manages Claude Code, automatic compaction shows no scene.** On a Team or Enterprise login, Claude Code passes the compaction event over the plugins you install yourself, and town-link is one of them. When Claude Code compacts the conversation on its own because the context is full, the office shows nothing, and Claude Code shows a line saying town-link's `session.compact` hook was skipped. It does no harm. Typing `/compact` yourself still shows the scene. On a personal account automatic compaction shows too.
 - **Work done while the app is closed is not shown later.** town-link sends events only while the app is running and drops them otherwise. A Claude Code session that is already running shows up within a few seconds of the app starting, from that point on.
 - **Commands you run with `!` don't show in the office.** Claude Code runs them in your shell without the model, and tells plugins nothing about them. If Claude goes on working after one, that work shows as usual, with the Chief of Staff's note reading "Continuing".
 - **A session that stops responding leaves the office about two minutes later.** When a Claude Code session ends normally, its Chief of Staff leaves right away. When it stops responding (for example, the terminal was killed), its Chief of Staff stays until the app has heard nothing for two minutes.

@@ -87,19 +87,40 @@ describe('/compact', () => {
 })
 
 describe('Stop hook', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const note = ($: any, text: string, agentId?: string) =>
+    $.session.append({
+      message: { type: 'user', role: 'user', isMeta: true, content: [{ type: 'text', text }] },
+      door: 'note',
+      origin: { kind: 'engine' },
+      uuid: 'note-1',
+      ...(agentId ? { agentId } : {}),
+    })
+
   test("a Stop block's reason reaches the app with the return", async ($, on) => {
     const { clock, posted } = world(on)
-    on('classic.Stop', () => ({ block: 'Tests are failing' }))
 
     await $.session.start({ cwd: '/work/town', surface: 'terminal', isInteractive: true })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await ($.prompt as any).submit({ text: 'fix the login bug' }).catch(() => undefined)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await ($.classic as any).Stop({ session_id: 'session-1', transcript_path: '', cwd: '/work/town', hook_event_name: 'Stop', stop_hook_active: false })
+    await note($, 'Stop hook feedback:\nTests are failing')
     await clock.advance(1_000)
 
     const returns = posted.filter(ev => ev.type === 'ticket.return')
     expect(returns.map(ev => ev.reason)).toEqual(['Tests are failing'])
+  })
+
+  test("another note, or a subagent's, is no return", async ($, on) => {
+    const { clock, posted } = world(on)
+
+    await $.session.start({ cwd: '/work/town', surface: 'terminal', isInteractive: true })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ($.prompt as any).submit({ text: 'fix the login bug' }).catch(() => undefined)
+    await note($, 'Some other note')
+    await note($, 'Stop hook feedback:\nNot done', 'agent-1')
+    await clock.advance(1_000)
+
+    expect(posted.filter(ev => ev.type === 'ticket.return')).toEqual([])
   })
 })
 

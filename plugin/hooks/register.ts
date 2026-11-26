@@ -37,12 +37,6 @@ type Endpoint = { port: number; token: string }
 
 let town = new Town()
 
-// Reads the permission mode a classic hook's input carries, then passes the event on.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function readMode($: any, e: any, next: any) {
-  safe(() => town.setPermissionMode((e as { permission_mode?: string }).permission_mode))
-  return next(e)
-}
 let sessionId = ''
 let projectId = ''
 let seq = 0
@@ -296,8 +290,8 @@ export const register: Register = on => {
       const { identity, name } = projectIdentity(repo?.remote, root)
       projectId = await hashId(identity)
 
-      // The starting permission mode, for when no classic hook reports it (another plugin may
-      // pass classic events on before ours run). Auto mode: a classifier answers most asks.
+      // The starting permission mode, for an ask auto mode's classifier is not seen answering
+      // (tool.judge). Auto mode: a classifier answers most asks.
       const permissions = (await $.settings.read({ key: 'permissions' }).catch(() => undefined)) as
         | { defaultMode?: string }
         | undefined
@@ -483,6 +477,8 @@ export const register: Register = on => {
     }
   }).catch(passOn)
 
+  // Where an organization manages Claude Code, its guard passes session.compact over plugins the
+  // user installed, with a notice; kept anyway, as nothing else tells an automatic compaction.
   on('session.compact', async ($, e, next) => {
     const inCommand = commandCompact
     if (inCommand && !e.agentId && e.trigger !== 'precompute') {
@@ -529,21 +525,29 @@ export const register: Register = on => {
     return yield* next(e) // pass the request on as if we were not here
   })
 
-  // Classic hooks carry the session's permission mode; auto mode means a classifier, not the
-  // user, answers most permission asks (the app then skips the approval sound). Where an
-  // organization manages Claude Code, every classic hook passes over plugins the user installed;
-  // the mode then comes only from settings at session start and from each subagent's start.
-  on('classic.PreToolUse', readMode).catch(passOn)
+  // No classic.* hook: where an organization manages Claude Code, its guard passes them over
+  // plugins the user installed and shows a notice each time, which the user can do nothing about.
 
-  on('classic.Stop', async ($, e, next) => {
+  // Auto mode's classifier answering an ask, so the app stays quiet while it decides.
+  on('tool.judge', async ($, e, next) => {
+    safe(() => town.judging(e.tool_use_id))
     const r = await next(e)
+    safe(() => town.judged(e.tool_use_id, r?.decision))
+    return r
+  }).catch(passOn)
+
+  // A Stop hook that blocks the end of the turn is stored as a note: "Stop hook feedback:" and
+  // its reason. The work goes on in the same turn.
+  on('session.append', { door: 'note' }, async ($, e, next) => {
     safe(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = r as any
-      // A block carries the hook's reason as its text (ClassicResult.block).
-      if (res?.block) town.stopBlocked(typeof res.block === 'string' ? res.block : undefined, Date.now())
+      if (e.agentId) return
+      const content = e.message?.content
+      const text = Array.isArray(content)
+        ? content.map(b => (b && typeof b === 'object' && 'text' in b && typeof b.text === 'string' ? b.text : '')).join('')
+        : typeof content === 'string' ? content : ''
+      town.note(text, Date.now())
     })
     collect()
-    return r
+    return next(e)
   }).catch(passOn)
 }

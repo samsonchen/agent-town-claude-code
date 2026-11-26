@@ -43,7 +43,9 @@ type Ticket = { id: string; origin: Origin; startTs: number; returned: boolean; 
 type Desk = { id: string; role: string; firm: boolean; since: number; lastActive: number }
 type Staff = { name?: string; hireTs: number; role?: string }
 type Task = { startTs: number; ticketId?: string; agentId?: string }
-type Approval = { tool: string; agentId?: string; askTs: number; waited: boolean; autoMode: boolean }
+// judged: true while auto mode's classifier answers the ask (tool.judge), false once it passed the
+// ask to the person; absent where no classifier was asked, and the permission mode decides.
+type Approval = { tool: string; agentId?: string; askTs: number; waited: boolean; autoMode: boolean; judged?: boolean }
 
 export type ToolOutcome = { ok: boolean; result: Record<string, unknown> }
 
@@ -422,9 +424,16 @@ export class Town {
     this.emit({ type: 'ticket.return', ticketId: t.id, ...(reason ? { reason: cut(reason) } : {}) })
   }
 
-  /** classic.Stop backup: the Stop hook chain blocked the end of the turn. */
+  /** A Stop hook blocked the end of the turn: its reason is the text after "Stop hook feedback:". */
   stopBlocked(reason: string | undefined, now: number) {
     this.returnTicket(reason ?? '', now)
+  }
+
+  /** session.append, a note row of the main conversation. A Stop hook's block is stored as
+   *  "Stop hook feedback:" and its reason; other notes are left alone. */
+  note(text: string, now: number) {
+    const m = /^\s*Stop hook feedback:\s*([\s\S]*)$/.exec(text)
+    if (m) this.stopBlocked(m[1]?.trim() || undefined, now)
   }
 
   /** turn.complete. */
@@ -596,7 +605,20 @@ export class Town {
     this.approvals.set(e.tool_use_id, { tool: e.tool, agentId: e.agentId ?? this.desk?.id, askTs: now, waited: false, autoMode: this.permissionMode === 'auto' })
   }
 
-  /** The permission mode from a classic hook's input. In auto mode a classifier answers asks. */
+  /** tool.judge: auto mode's classifier is answering this ask (before its verdict). */
+  judging(tool_use_id: string) {
+    const a = this.approvals.get(tool_use_id)
+    if (a) a.judged = true
+  }
+
+  /** tool.judge settled: `ask` means the classifier gave no verdict and a person answers. */
+  judged(tool_use_id: string, decision: unknown) {
+    const a = this.approvals.get(tool_use_id)
+    if (a && decision === 'ask') a.judged = false
+  }
+
+  /** The permission mode from settings at session start and from a subagent's start; used for an
+   *  ask the classifier was not seen answering. In auto mode a classifier answers asks. */
   setPermissionMode(mode: string | undefined) {
     if (mode) this.permissionMode = mode
   }
@@ -868,8 +890,8 @@ export class Town {
           approvalId: id,
           ...(a.agentId ? { agentId: a.agentId } : {}),
           tool: a.tool,
-          // The mode may be reported after the ask (a subagent's start, a later hook).
-          ...(a.autoMode || this.permissionMode === 'auto' ? { autoMode: true } : {}),
+          // The classifier's part decides; else the mode, which may be reported after the ask.
+          ...((a.judged ?? (a.autoMode || this.permissionMode === 'auto')) ? { autoMode: true } : {}),
         })
       }
     }

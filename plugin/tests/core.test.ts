@@ -246,6 +246,15 @@ describe('tickets', () => {
     ])
   })
 
+  test("a Stop hook's note returns the ticket with its reason; other notes do not", async () => {
+    const t = new Town(ids())
+    t.prompt({ text: 'fix it', kind: 'composer' }, 0)
+    t.drain()
+    t.note('Some other note', 50)
+    t.note('Stop hook feedback:\nTests still fail', 100)
+    expect(t.drain()).toEqual([{ type: 'ticket.return', ticketId: 't1', reason: 'Tests still fail' }])
+  })
+
   test('a Stop block and the auto-continuation that follows count as one return', async () => {
     const t = new Town(ids())
     t.prompt({ text: 'fix it', kind: 'composer' }, 0)
@@ -492,6 +501,24 @@ describe('approvals', () => {
     t.setPermissionMode('auto')
     t.tick(APPROVAL_DELAY_MS)
     expect(t.drain()).toEqual([{ type: 'approval.wait', approvalId: 'u1', tool: 'Bash', autoMode: true }])
+  })
+
+  test("a wait auto mode's classifier answers is marked, whatever the mode", async () => {
+    const t = new Town(ids())
+    t.ask({ tool_use_id: 'u1', tool: 'Bash' }, 0)
+    t.judging('u1')
+    t.tick(APPROVAL_DELAY_MS)
+    expect(t.drain()).toEqual([{ type: 'approval.wait', approvalId: 'u1', tool: 'Bash', autoMode: true }])
+  })
+
+  test('a wait the classifier passes to the person is not marked, even in auto mode', async () => {
+    const t = new Town(ids())
+    t.setPermissionMode('auto')
+    t.ask({ tool_use_id: 'u1', tool: 'Bash' }, 0)
+    t.judging('u1')
+    t.judged('u1', 'ask')
+    t.tick(APPROVAL_DELAY_MS)
+    expect(t.drain()).toEqual([{ type: 'approval.wait', approvalId: 'u1', tool: 'Bash' }])
   })
 
   test('an ask settled quickly by auto mode shows nothing', async () => {

@@ -256,7 +256,7 @@ The message text is not sent.
 | `approvalId` | string | The tool use ID |
 | `agentId` | string, optional | Absent for the main agent |
 | `tool` | string | |
-| `autoMode` | boolean, optional | `true` when the session is in auto mode, where a classifier rather than the user answers most asks. The app shows the wait but plays no sound. |
+| `autoMode` | boolean, optional | `true` when auto mode's classifier rather than the user is answering this ask (where town-link sees no classifier, when the session is in auto mode). The app shows the wait but plays no sound. |
 
 ### `approval.end`
 
