@@ -240,6 +240,8 @@ The state is updated from protocol events only. The choreographer reads state ch
 
 If a session sends no event and no heartbeat for 2 minutes, treat it as closed (scene 10). `Building.expireStale` checks every 5 s. This covers crashed or killed sessions that never sent `session.close`.
 
+Time the computer spent asleep doesn't count: sessions pause with it, and their heartbeats come back after it wakes. The store's timer ticks every 0.1 s; a gap of more than 10 s between two ticks means the app was suspended, and every session's last-event time moves forward by the gap (`Building.paused`) before that tick's check. Without this, the first check after waking closed every session, with its operators and staff, and the heartbeat that followed brought back only the Chief of Staff.
+
 ## Security
 
 - The app listens on 127.0.0.1 only.

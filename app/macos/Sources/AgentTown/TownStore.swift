@@ -23,6 +23,9 @@ final class TownStore: ObservableObject {
     private var sequencer = Sequencer()
     private var timer: Timer?
     private var lastExpiry = Date.distantPast
+    private var lastTick: Date?
+    /// A gap this long between two ticks of the 0.1 s timer means the app was suspended.
+    private static let suspendedAfter: TimeInterval = 10
     let families: ModelFamilies
 
     init() {
@@ -40,6 +43,15 @@ final class TownStore: ObservableObject {
     }
 
     private func tick() {
+        // The computer slept (or the app was otherwise suspended): that time is not a session's
+        // silence, so it never makes one stale. Checked before anything else this tick.
+        let now = Date()
+        if let last = lastTick, now.timeIntervalSince(last) > Self.suspendedAfter {
+            let gapMs = Int64(now.timeIntervalSince(last) * 1000)
+            log("suspended for \(gapMs / 1000) s: sessions' silence clocks moved forward")
+            building.paused(forMs: gapMs)
+        }
+        lastTick = now
         apply(sequencer.flush(nowMs: Self.nowMs))
         if Date().timeIntervalSince(lastExpiry) > 5 {
             lastExpiry = Date()

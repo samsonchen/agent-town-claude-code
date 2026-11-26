@@ -387,6 +387,16 @@ public struct Building: Sendable {
         return out
     }
 
+    /// The app was suspended for `ms` (the computer slept): every session's last event moves
+    /// forward by that much, so time asleep never counts toward `expireStale`. Sessions paused
+    /// with the computer; their heartbeats resume after it wakes.
+    public mutating func paused(forMs ms: Int64) {
+        guard ms > 0 else { return }
+        for p in blocks.keys {
+            for s in blocks[p]!.chiefs.keys { blocks[p]!.chiefs[s]!.lastEventTs += ms }
+        }
+    }
+
     /// Closes sessions with no event for `staleAfterMs` (spec scene 10; architecture: stale sessions).
     public mutating func expireStale(nowMs: Int64, staleAfterMs: Int64 = 120_000) -> [Change] {
         var out: [Change] = []

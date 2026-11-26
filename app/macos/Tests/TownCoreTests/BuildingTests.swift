@@ -122,6 +122,19 @@ func replay(_ name: String, sound: SoundSettings = SoundSettings()) throws -> (B
     #expect(b.expireStale(nowMs: 200_000) == [.chiefLeft(projectId: "p", sessionId: "s"), .blockRemoved(projectId: "p")])
 }
 
+@Test func timeAsleepDoesNotMakeSessionsStale() {
+    var b = Building()
+    b.apply(TownEvent(type: "task.start", sessionId: "s", seq: 1, ts: 1000, projectId: "p",
+                      fields: ["taskId": .string("b1"), "kind": .string("shell"), "description": .string("render")]),
+            receivedMs: 1000)
+    // The computer slept for ten minutes: the first check after waking keeps the session.
+    b.paused(forMs: 600_000)
+    #expect(b.expireStale(nowMs: 610_000).isEmpty)
+    #expect(b.blocks["p"]!.chiefs["s"]!.operators["b1"] != nil)
+    // Silence while awake still counts.
+    #expect(b.expireStale(nowMs: 730_000) == [.chiefLeft(projectId: "p", sessionId: "s"), .blockRemoved(projectId: "p")])
+}
+
 @Test func sequencerReorders() {
     var q = Sequencer(windowMs: 500)
     func e(_ n: Int) -> TownEvent { TownEvent(type: "heartbeat", sessionId: "s", seq: n, ts: 0, projectId: "p") }
