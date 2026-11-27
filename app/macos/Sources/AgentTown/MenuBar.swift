@@ -113,6 +113,9 @@ final class MenuBar: NSObject {
         menu.addItem(.separator())
         menu.addItem(action(Labels.text("Settings…"), key: ",") { [weak self] in self?.open("settings") })
         menu.addItem(.separator())
+        // Brings the office back when it is empty: with a screen capture tool watching a second
+        // display, the 3D view can stop drawing for good (labels still show); only a new process draws again.
+        menu.addItem(action(Labels.text("Restart agent-town")) { Prefs.relaunch() })
         menu.addItem(action(Labels.text("Quit agent-town"), key: "q") { NSApp.terminate(nil) })
         return menu
     }
