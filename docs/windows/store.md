@@ -93,8 +93,8 @@ A product has one submission at a time. When a new version is ready while the la
 One-time setup (the user does this):
 
 1. Install the CLI: `winget install --id 9P53PC5S0PHJ --source msstore` (installed 2026-11-27, version 0.4.4.3), then open a new terminal.
-2. Partner Center → Settings → Account settings → Organization profile → **Tenants**: associate a Microsoft Entra ID tenant (or create one).
-3. Account settings → User management → **Microsoft Entra applications** → add an application with the **Manager** role, and add a key (client secret; it is shown once). Note the tenant ID and client ID. The Seller ID is in Account settings → Legal info → Developer.
+2. Partner Center → gear → Account settings → **Tenants**. With no organization or tenant to associate, select **Create Microsoft Entra ID** (free) and follow the wizard: it makes a new directory (`<name>.onmicrosoft.com`) and its global admin account. Adding an Entra application needs a Partner Center Manager who is also that tenant's global admin, so do step 3 signed in to Partner Center as the new admin account, if your usual sign-in is refused.
+3. Account settings → User management → **Microsoft Entra applications** → Add Microsoft Entra application → Create Microsoft Entra application (any display name; any unique reply URL, such as `https://localhost/agent-town`, which msstore does not use), with the **Manager** role, and add a key (client secret; it is shown once). Note the tenant ID and client ID. The Seller ID is in Account settings → Legal info → Developer.
 4. In your own terminal:
    ```powershell
    msstore reconfigure --tenantId <tenant> --sellerId <seller> --clientId <client> --clientSecret <secret>
