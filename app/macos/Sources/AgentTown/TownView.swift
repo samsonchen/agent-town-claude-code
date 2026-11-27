@@ -18,9 +18,6 @@ struct TownView: View {
     @AppStorage(Prefs.opacity) private var opacity = 1.0
     /// Pans the view toward moving characters when the office does not fit (spec: auto-scroll).
     @State private var autoScroll = AutoScroll()
-    /// False for a moment when the display setup changes, so the RealityView is made again (see `screenChanged`).
-    @State private var renderOn = true
-    @State private var renderTask: Task<Void, Never>?
 
     /// The smallest window: a corner of a laptop screen. A window smaller than the office scrolls.
     static let minSize = CGSize(width: 320, height: 240)
@@ -149,43 +146,22 @@ struct TownView: View {
         }
     }
 
-    /// RealityKit draws from a display link tied to the screen the window was on. When that screen goes
-    /// away (a virtual or external display is disconnected and the window moves to another), the link
-    /// can stay dead: the labels still update, but the scene stops drawing and playing sounds.
-    /// Taking the RealityView out and putting a new one in gives it a new link. The two must not
-    /// overlap (they would fight over the scene's entities), so the old one goes first. Changes come
-    /// in bursts, so wait for a quiet moment.
-    private func screenChanged() {
-        renderTask?.cancel()
-        renderTask = Task {
-            try? await Task.sleep(for: .milliseconds(500))
-            guard !Task.isCancelled else { return }
-            renderOn = false
-            try? await Task.sleep(for: .milliseconds(300))
-            scene.root.removeFromParent()
-            camera.removeFromParent()
-            renderOn = true // even if cancelled meanwhile: the view must not stay out
-        }
-    }
-
     var body: some View {
         GeometryReader { geo in
             let proj = projector(geo.size)
             // Text grows with the office in a window larger than it.
             let _ = { ViewScale.zoom = max(1, min(Self.maxZoom, pixelsPerMeter(geo.size) / Self.pixelsPerMeter)) }()
             ZStack(alignment: .topLeading) {
-                if renderOn {
-                    RealityView { content in
-                        content.add(scene.root)
-                        content.add(camera)
-                    } update: { content in
-                        // Put the scene back if anything took it out of this view.
-                        if scene.root.scene == nil { content.add(scene.root) }
-                        if camera.scene == nil { content.add(camera) }
-                        proj.apply(to: camera)
-                    }
-                    .realityViewCameraControls(.none)
+                RealityView { content in
+                    content.add(scene.root)
+                    content.add(camera)
+                } update: { content in
+                    // Put the scene back if anything took it out of this view.
+                    if scene.root.scene == nil { content.add(scene.root) }
+                    if camera.scene == nil { content.add(camera) }
+                    proj.apply(to: camera)
                 }
+                .realityViewCameraControls(.none)
                 TimelineView(.animation) { _ in
                     ZStack(alignment: .topLeading) {
                         CallLines(lines: scene.callLines(), projector: proj)
@@ -203,10 +179,6 @@ struct TownView: View {
                 scene.click(at: point, projector: proj)
             }
             .onAppear { proj.apply(to: camera) }
-            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in screenChanged() }
-            .onReceive(NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification)) { n in
-                if (n.object as? NSWindow) === window { screenChanged() }
-            }
             .onChange(of: geo.size) { proj.apply(to: camera) }
             .onChange(of: scene.officeSize) { old, _ in
                 fitWindow(before: old)

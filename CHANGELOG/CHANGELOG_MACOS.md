@@ -2,6 +2,10 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## 1.0.28 (2026-11-27)
+
+- Fixed: the office could go empty (only the name tags and bars, with no floor, characters or sounds) when you dragged its window slowly from one display to another. The redraw that 1.0.27 added for a disconnected display caused it, and it is removed again.
+
 ## 1.0.27 (2026-11-27)
 
 - Fixed: after a display was disconnected (a virtual or external display, with the office window on it), the office could stay empty and silent: only the labels were drawn, over a blank floor, and no sounds played, until the app was restarted. The office now redraws itself when the display setup changes or the window moves to another screen.
