@@ -32,7 +32,6 @@
 "Play" = "播放";
 "Only when a task takes at least" = "工作至少花了";
 "seconds (0: every task)" = "秒才播放（0：每個工作）";
-"Restart agent-town" = "重新啟動 agent-town";
 "Quit agent-town" = "結束 agent-town";
 
 /* Updates */
