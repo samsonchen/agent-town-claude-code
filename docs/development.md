@@ -177,6 +177,8 @@ app/macos/scripts/release.sh --publish --draft   # a draft release to review fir
 ```powershell
 .\app\windows\scripts\release.ps1            # run the tests, export the app, build the installer
 .\app\windows\scripts\release.ps1 -Publish   # publish release windows-v<version>
+.\app\windows\scripts\release.ps1 -Store     # build the Microsoft Store package (.msix)
+.\app\windows\scripts\store-submit.ps1       # submit it to the Store with msstore (credentials stay in msstore, never the repo)
 ```
 
 See [windows/releasing.md](windows/releasing.md).

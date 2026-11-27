@@ -66,9 +66,41 @@ Each Windows release can go to the Store too. The Store package and the installe
    .\app\windows\scripts\release.ps1 -Store
    ```
    It prints the package's path: `app\windows\build\store\agent-town-<version>.msix`.
+
+   Steps 3 to 6 can be done by a script instead: [Submitting with the script](#submitting-with-the-script).
 3. In Partner Center, Apps and games → Agent-Town for Claude Code → **Start update**. This copies the last submission.
 4. **Packages:** remove the old `.msix` (the trash icon on its row) and upload the new one. Partner Center checks it; the version must be higher than the published one.
 5. **Store listings** (optional): "What's new in this version" can take the version's entry from `CHANGELOG/CHANGELOG_WINDOWS.md`. Change the description or screenshots only if the app looks different.
 6. **Submit to the Store.** Pricing, properties, age rating and the certification notes carry over. Store users get the new version automatically once it passes, but not at once: the Store checks for updates in the background, which can take from a few hours to a day after publishing. To get it right away: Microsoft Store → Library (Downloads) → Get updates. The app itself does not say a newer version exists (it never checks GitHub for a newer app).
 
 A product has one submission at a time. When a new version is ready while the last one is still in certification, either let that one finish and then submit the newest package (the usual way), or cancel it in Partner Center and submit the newest package instead, which starts certification over. Versions in between need not go to the Store: submit the newest one.
+
+## Submitting with the script
+
+`app\windows\scripts\store-submit.ps1` does steps 3 to 6 of "Submitting an update" with the Microsoft Store Developer CLI (`msstore`). It takes the package `release.ps1 -Store` built for the version in `project.godot`.
+
+```powershell
+.\app\windows\scripts\store-submit.ps1 -Status          # the current submission's status
+.\app\windows\scripts\store-submit.ps1 -Draft           # upload, keep the submission as a draft
+.\app\windows\scripts\store-submit.ps1                  # upload and submit to certification
+.\app\windows\scripts\store-submit.ps1 -DeletePending   # delete the pending submission first, then submit
+```
+
+`msstore publish` deletes a pending draft and makes a new submission from the last published one, so the listing, pricing, properties, age rating and certification notes carry over; only the package changes. "What's new in this version" is not set by the script: change it in Partner Center (a `-Draft` submission is the moment) if wanted. When a submission is in certification, publish may refuse; `-DeletePending` deletes it first (msstore asks to confirm), which starts certification over.
+
+**Credentials stay out of the repo.** The script holds none and never asks for them. `msstore` keeps its own, set once by the user in their own terminal (not in a script, a commit or a chat). `.gitignore` also ignores `.env`, `*.pfx`, `*.p12`, `*.local.ps1`, `*credentials*.json` and `msstore*.json`, in case one lands in the checkout.
+
+One-time setup (the user does this):
+
+1. Install the CLI: `winget install --id 9P53PC5S0PHJ --source msstore` (installed 2026-11-27, version 0.4.4.3), then open a new terminal.
+2. Partner Center → Settings → Account settings → Organization profile → **Tenants**: associate a Microsoft Entra ID tenant (or create one).
+3. Account settings → User management → **Microsoft Entra applications** → add an application with the **Manager** role, and add a key (client secret; it is shown once). Note the tenant ID and client ID. The Seller ID is in Account settings → Legal info → Developer.
+4. In your own terminal:
+   ```powershell
+   msstore reconfigure --tenantId <tenant> --sellerId <seller> --clientId <client> --clientSecret <secret>
+   ```
+5. Check: `msstore info` prints the configuration, and `.\app\windows\scripts\store-submit.ps1 -Status` the submission's status.
+
+Not yet known: whether Partner Center offers Microsoft Entra applications to an individual developer account (this one is). If it does not, submit in Partner Center as above.
+
+A stuck submission (2026-11-27): Submission 10 (`1152921505702517492`) is unfinished and Partner Center's website cannot open it (Microsoft ticket 2611270060000470). Try `store-submit.ps1 -Status`, then `-DeletePending` to clear it, so the 1.0.17 package can go in a new submission.

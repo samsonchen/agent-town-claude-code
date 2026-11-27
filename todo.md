@@ -367,6 +367,9 @@ The free way to a signed Windows app for now: the Store signs MSIX packages, so 
 - [x] The user: submitted 1.0.6 in Partner Center as `store.md` says. Approved and live on 2026-11-15: https://apps.microsoft.com/detail/9N0G35LW0LNK
 - [x] The README's (both languages) and the web page's Windows install sections point to the Store first, with the installer as the other way (2026-11-15).
 - [x] 1.0.8 submitted as an update on 2026-11-15 (the description's "you approval" typo fixed too); it passed certification and went live the same day. 1.0.9 passed certification on 2026-11-16, and 1.0.10 (package built from `d853442`) the same day. 1.0.11 (package built from `3ab10d6`, the `windows-v1.0.11` release) is next. Later versions: `store.md` → "Submitting an update".
+- [x] `app/windows/scripts/store-submit.ps1` (2026-11-27): submits the `-Store` package with the Microsoft Store Developer CLI (`msstore`, installed on the dev PC); no credentials in the script or the repo (msstore keeps them; `.gitignore` guards against strays). Checked: it parses, and with msstore not yet configured it stops with the setup steps. Windows only (the Store).
+- [ ] The user: the one-time msstore setup in `store.md` → "Submitting with the script" (an Entra app in Partner Center, then `msstore reconfigure` in their own terminal). Find out whether an individual account offers Entra applications.
+- [ ] Then: `store-submit.ps1 -Status`, clear the stuck Submission 10 (`-DeletePending`; Microsoft ticket 2611270060000470), and submit 1.0.17. Note the first real run's output here and fix the script if msstore behaves differently from its docs.
 
 ### Shared material a second app needs
 

@@ -22,7 +22,7 @@ The Windows app has its own version number, `config/version` in `app/windows/pro
    .\app\windows\scripts\release.ps1 -Publish
    ```
    It creates the release `windows-v<version>`, titled "agent-town for Windows <version>", with the installer and notes (how to get past SmartScreen, the checksum), downloads the installer again and checks its checksum. `-Publish -Draft` makes a draft to look at first.
-5. Build the Microsoft Store package from the same commit and submit it as an update: [store.md](store.md) → Submitting an update.
+5. Build the Microsoft Store package from the same commit and submit it as an update: [store.md](store.md) → Submitting an update, in Partner Center or with `.\app\windows\scripts\store-submit.ps1` (store.md → Submitting with the script).
 
 ## The installer
 

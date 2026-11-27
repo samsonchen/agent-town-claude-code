@@ -7,3 +7,12 @@ xcuserdata/
 __pycache__/
 .build/
 .swiftpm/
+
+# Credentials never go in the repo (msstore keeps its own outside it). Guard against strays.
+.env
+.env.*
+*.pfx
+*.p12
+*.local.ps1
+*credentials*.json
+msstore*.json
