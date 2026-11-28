@@ -11,6 +11,15 @@
 #   app/macos/scripts/release.sh --unsigned  a test build: no Developer ID, no notarization
 #   app/macos/scripts/release.sh --unsigned --publish
 #                                            an unsigned pre-release on GitHub
+#   --minor / --major                        raise the minor or major number instead of the patch
+#
+# The version is chosen here, not by hand: the last released version (the newest of the cask's
+# and the newest v* tag) with its patch number raised by one. Fixes and features between releases
+# do not change any version. Write what a user would notice under "## Unreleased" at the top of
+# CHANGELOG/CHANGELOG_MACOS.md; --publish turns that heading into the new version and date,
+# writes the version into About.swift (AppInfo.fallbackVersion, the last released version, which
+# run-local.sh and the tests read) and commits both with the release. A build without --publish
+# leaves the files as they were.
 #
 # --publish writes the new version and the .dmg's checksum into Casks/agent-town.rb (the Homebrew
 # cask; this repo is the tap). Once the release is published and its .dmg's checksum matches,
@@ -24,7 +33,7 @@
 #      xcrun notarytool store-credentials agent-town-notary --apple-id <email> --team-id <TEAM ID>
 #
 # Settings (environment):
-#   VERSION         default: the macOS app's version (AppInfo.fallbackVersion in Sources/AgentTown/About.swift)
+#   VERSION         default: the next version, as above (set it to choose another)
 #   BUNDLE_ID       default: ai.careactive.agenttown-claude-code
 #   SIGN_IDENTITY   default: the one "Developer ID Application" certificate in the keychain
 #   NOTARY_PROFILE  default: agent-town-notary
@@ -34,12 +43,15 @@ set -euo pipefail
 MODE=release
 PUBLISH=0
 DRAFT=0
+BUMP=patch
 for arg in "$@"; do
   case "$arg" in
     --publish) PUBLISH=1 ;;
     --draft) DRAFT=1 ;;
     --unsigned) MODE=unsigned ;;
-    -h|--help) sed -n '2,32p' "$0"; exit 0 ;;
+    --minor) BUMP=minor ;;
+    --major) BUMP=major ;;
+    -h|--help) sed -n '2,42p' "$0"; exit 0 ;;
     *) echo "unknown option: $arg" >&2; exit 2 ;;
   esac
 done
@@ -49,16 +61,31 @@ REPO="$(cd "$PKG/../.." && pwd)"
 OUT="$PKG/build/release"
 APP="$OUT/AgentTown.app"
 
-VERSION="${VERSION:-$(sed -nE 's/.*static let fallbackVersion = "([^"]+)".*/\1/p' "$REPO/app/macos/Sources/AgentTown/About.swift")}"
-[[ -n "$VERSION" ]] || { echo "release.sh: no version found in About.swift (AppInfo.fallbackVersion)" >&2; exit 1; }
+ABOUT="$REPO/app/macos/Sources/AgentTown/About.swift"
+CHANGELOG="$REPO/CHANGELOG/CHANGELOG_MACOS.md"
+CASK="$REPO/Casks/agent-town.rb"
+step() { printf '\n==> %s\n' "$*"; }
+fail() { printf 'error: %s\n' "$*" >&2; exit 1; }
+
+# -- Version: the last release, raised -----------------------------------------------------------
+if [ -z "${VERSION:-}" ]; then
+  git -C "$REPO" fetch -q --tags origin 2>/dev/null || true
+  cask_version="$(sed -nE 's/^  version "([^"]+)".*/\1/p' "$CASK")"
+  last="$( { echo "$cask_version"; git -C "$REPO" tag -l 'v[0-9]*' | sed 's/^v//'; } | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+  [ -n "$last" ] || fail "no released version found (the cask and the v* tags have none); set VERSION"
+  IFS=. read -r major minor patch <<<"$last"
+  case "$BUMP" in
+    major) VERSION="$((major + 1)).0.0" ;;
+    minor) VERSION="$major.$((minor + 1)).0" ;;
+    *) VERSION="$major.$minor.$((patch + 1))" ;;
+  esac
+  echo "Last release $last, so this is $VERSION"
+fi
 BUILD_NUMBER="$(git -C "$REPO" rev-list --count HEAD)"
 BUNDLE_ID="${BUNDLE_ID:-ai.careactive.agenttown-claude-code}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-agent-town-notary}"
 ARCHS="${ARCHS:-arm64 x86_64}"
 DMG="$OUT/AgentTown-$VERSION.dmg"
-
-step() { printf '\n==> %s\n' "$*"; }
-fail() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 # -- Signing identity --------------------------------------------------------------------------
 if [ "$MODE" = release ]; then
@@ -80,6 +107,29 @@ if [ "$PUBLISH" -eq 1 ]; then
     [ "$(git -C "$REPO" rev-parse HEAD)" = "$(git -C "$REPO" rev-parse origin/main)" ] \
       || fail "main is not the same as origin/main: push or pull first"
   fi
+fi
+
+# -- Write the version into the sources (put back unless this is a real release) ------------------
+KEEP_VERSION=0
+BACKUP="$(mktemp -d)"
+cp "$ABOUT" "$BACKUP/About.swift"; cp "$CHANGELOG" "$BACKUP/CHANGELOG_MACOS.md"
+restore_sources() {
+  if [ "$KEEP_VERSION" -eq 0 ]; then cp "$BACKUP/About.swift" "$ABOUT"; cp "$BACKUP/CHANGELOG_MACOS.md" "$CHANGELOG"; fi
+  rm -rf "$BACKUP"
+}
+trap restore_sources EXIT
+sed -i '' -E "s/(static let fallbackVersion = \")[^\"]+(\")/\1$VERSION\2/" "$ABOUT"
+grep -q "fallbackVersion = \"$VERSION\"" "$ABOUT" || fail "could not write the version into About.swift"
+if [ "$PUBLISH" -eq 1 ]; then
+  if grep -q '^## Unreleased' "$CHANGELOG"; then
+    # The entry must say something: at least one bullet before the next heading.
+    awk '/^## Unreleased/{f=1;next} /^## /{f=0} f&&/^- /{n++} END{exit n?0:1}' "$CHANGELOG" \
+      || fail "the Unreleased entry in CHANGELOG_MACOS.md has no items"
+    sed -i '' -E "s/^## Unreleased.*/## $VERSION ($(date +%Y-%m-%d))/" "$CHANGELOG"
+  else
+    grep -q "^## $VERSION " "$CHANGELOG" || fail "CHANGELOG_MACOS.md has no '## Unreleased' entry for this release"
+  fi
+  KEEP_VERSION=1
 fi
 
 # -- Build -------------------------------------------------------------------------------------
@@ -197,14 +247,18 @@ if [ "$PUBLISH" -eq 1 ]; then
 $install
 
 SHA-256 of AgentTown-$VERSION.dmg: $SHA"
+  if [ "$DRAFT" -eq 0 ]; then
+    step "Committing the version $VERSION"
+    git -C "$REPO" commit -q -m "macOS app $VERSION" -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>" -- "$ABOUT" "$CHANGELOG" || true
+    git -C "$REPO" push -q origin main
+  fi
   step "Creating GitHub release v$VERSION (${flags[*]})"
   (cd "$REPO" && gh release create "v$VERSION" "$DMG" "${flags[@]}" --target "$(git rev-parse HEAD)" \
     --title "agent-town for macOS $VERSION" --notes "$notes")
 
-  CASK="$REPO/Casks/agent-town.rb"
   sed -i '' -e "s/^  version \".*\"/  version \"$VERSION\"/" -e "s/^  sha256 \".*\"/  sha256 \"$SHA\"/" "$CASK"
   if [ "$DRAFT" -eq 1 ]; then
-    echo "Updated $CASK to $VERSION ($SHA), not committed."
+    echo "Updated $CASK, About.swift and the changelog to $VERSION ($SHA), not committed."
     echo "Review and publish the draft on GitHub, then commit and push the cask: 'brew upgrade' sees the release only then."
   else
     step "Checking the uploaded disk image"

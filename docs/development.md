@@ -150,10 +150,10 @@ The plugin, the macOS app and the Windows app each have their own version:
 | Part | Where the version is | How users get a new one |
 |---|---|---|
 | town-link | `plugin/.claude-plugin/plugin.json` | Pushed to `main`; users run `claude plugin update` |
-| macOS app | `AppInfo.fallbackVersion` in `app/macos/Sources/AgentTown/About.swift` | A release, `v<version>` |
+| macOS app | `AppInfo.fallbackVersion` in `app/macos/Sources/AgentTown/About.swift`, written by `release.sh --publish` (last release + 1 patch; do not raise it by hand) | A release, `v<version>` |
 | Windows app | `config/version` in `app/windows/project.godot` (and `export_presets.cfg`) | A release, `windows-v<version>` |
 
-When you raise a version, add it at the top of that part's changelog in `CHANGELOG/` (`CHANGELOG_PLUGIN.md`, `CHANGELOG_MACOS.md`, `CHANGELOG_WINDOWS.md`): what a user would notice, fixes included.
+When you raise a version, add it at the top of that part's changelog (the macOS app: under `## Unreleased`, which `release.sh --publish` renames) in `CHANGELOG/` (`CHANGELOG_PLUGIN.md`, `CHANGELOG_MACOS.md`, `CHANGELOG_WINDOWS.md`): what a user would notice, fixes included.
 
 Whether a plugin and an app work together depends only on the protocol version (`protocol` in each batch and in the endpoint file). Change it only for a breaking protocol change, and update both sides.
 

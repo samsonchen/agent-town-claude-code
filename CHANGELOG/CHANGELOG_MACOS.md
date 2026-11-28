@@ -2,6 +2,10 @@
 
 What changed in each release of the macOS app. Each version is tagged `v<version>` in this repository, and `git log v<previous>..v<version> -- app/macos` lists its commits. The Windows app and the town-link plugin have their own changelogs and version numbers. Whether an app and a town-link work together depends only on the protocol version.
 
+## Unreleased
+
+(Nothing yet: add what a user would notice as "- " items here; `release.sh --publish` needs at least one.)
+
 ## 1.0.28 (2026-11-27)
 
 - Fixed: the office could go empty (only the name tags and bars, with no floor, characters or sounds) when you dragged its window slowly from one display to another. The redraw that 1.0.27 added for a disconnected display caused it, and it is removed again.
