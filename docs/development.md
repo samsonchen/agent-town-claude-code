@@ -167,7 +167,7 @@ Both apps are published on this repository's GitHub Releases. Before a release, 
 app/macos/scripts/release.sh                 # build, sign and notarize; the .dmg is in app/macos/build/release/
 app/macos/scripts/release.sh --unsigned      # a test build, not signed
 app/macos/scripts/release.sh --publish       # publish release v<version> and push the Homebrew cask
-app/macos/scripts/release.sh --publish --draft   # a draft release to review first
+app/macos/scripts/release.sh --publish --draft   # a draft release to review first; see docs/releasing.md, Part G
 ```
 
 `--publish` refuses to run with uncommitted changes, off `main`, or when `main` differs from `origin/main`. It publishes the release titled "agent-town for macOS <version>" with the `.dmg` and its SHA-256, checks the uploaded file, and commits and pushes the cask, which is what `brew upgrade` reads. Signing secrets stay in the releasing Mac's keychain; never commit a credential.

@@ -105,7 +105,20 @@ app/macos/scripts/release.sh --publish
 - It builds and notarizes again, then publishes GitHub release `v<version>`, titled "agent-town for macOS <version>" (beside the Windows app's "agent-town for Windows <version>"), with the `.dmg` attached, tagged on the commit you built from. Its notes follow the Windows release's: one line on what it is, how to install, and the `.dmg`'s SHA-256. It is marked Latest. The app's update check goes by the tag (`v<version>`), not the title or the Latest mark.
 - It then downloads the uploaded `.dmg`, checks that its checksum matches, and commits and pushes the Homebrew cask with the new version (see [Homebrew](#homebrew)). After that, `brew update && brew upgrade --cask agent-town` installs the new version.
 - It refuses to run with uncommitted changes, from a branch other than `main`, or when `main` differs from `origin/main`.
-- To review the release on GitHub first, add `--draft`: the release is made as a draft, and the cask is updated but not committed. Publish the draft on GitHub → Releases, then commit and push `Casks/agent-town.rb` yourself.
+- To look at the release on GitHub before it goes public, use a draft instead: see [Part G](#part-g-review-a-draft-first-optional).
+
+## Part G: Review a draft first (optional)
+
+```
+app/macos/scripts/release.sh --publish --draft
+```
+
+A draft is the same signed and notarized build, uploaded to GitHub as a release only people with write access can see. Use it when someone should check the release page or the `.dmg` before users get it. Otherwise use Part F.
+
+- It can run from any branch. It does not commit or push anything: `About.swift`, the changelog heading (`## Unreleased` becomes `## <version> (<date>)`) and `Casks/agent-town.rb` are changed and left uncommitted. It creates no tag and does not check the uploaded `.dmg`.
+- **Approved:** on GitHub → Releases, click **Publish release**, then commit and push those three files. `brew upgrade` sees the version only once the cask is on `main`. The tag points at the commit before the version change, which is the one flaw of this route.
+- **Rejected:** delete the draft (Releases, or `gh release delete v<version>`) and undo the three files with `git checkout -- app/macos/Sources/AgentTown/About.swift CHANGELOG/CHANGELOG_MACOS.md Casks/agent-town.rb`. Then fix as usual, adding items under `## Unreleased`, and run Part F or G again. The version is the same, because nothing was released. Do not commit the leftovers: a committed cask would point `main` at a `.dmg` that was never released, and the next version would skip this one.
+- A second `--draft` run stops with "commit your changes before publishing" until the three files are undone, and the old draft deleted.
 
 ## Unsigned pre-releases
 
@@ -125,6 +138,6 @@ brew tap samsonchen/agent-town-claude-code https://github.com/samsonchen/agent-t
 brew install --cask samsonchen/agent-town-claude-code/agent-town
 ```
 
-- Homebrew reads the cask from this repo's `main` branch, not from the Releases page. A published release alone changes nothing for `brew upgrade`; the cask with the new version and checksum has to be pushed too. `release.sh --publish` does both (with `--draft`, push the cask yourself after publishing).
+- Homebrew reads the cask from this repo's `main` branch, not from the Releases page. A published release alone changes nothing for `brew upgrade`; the cask with the new version and checksum has to be pushed too. `release.sh --publish` does both (with a draft, push the cask yourself after publishing; see Part G).
 - Homebrew downloads only from a published release (not a draft) in a public repo.
 - Since 0.2.7 the app is signed and notarized, and the cask's `caveats` no longer has a "not signed yet" message. A signed app could also be submitted to the official Homebrew casks, which accept only signed and notarized apps.
